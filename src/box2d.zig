@@ -72,6 +72,10 @@ pub const Box2dBody = struct {
     pub fn get_rotation(self: Box2dBody) f32 {
         return c.b2Rot_GetAngle(c.b2Body_GetRotation(self.body_id));
     }
+
+    pub fn sleep(self: *Box2dBody) void {
+        c.b2Body_Disable(self.body_id);
+    }
 };
 
 pub const Box2dWorld = struct {

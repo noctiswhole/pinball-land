@@ -56,6 +56,9 @@ pub const Cappy = struct {
 
     pub fn damage(self: *Cappy) void {
         self.health -= 1;
+        if (self.health <= 0) {
+            self.body.sleep();
+        }
     }
 
     pub fn draw(self: Cappy) void {
