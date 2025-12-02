@@ -180,10 +180,10 @@ pub const Box2dWorld = struct {
         };
 
         flipper_body_def.position = left_position;
-        const flipper_left = Box2dBody.init_old(world_id, ball_body_def);
+        const flipper_left = Box2dBody.init_old(world_id, flipper_body_def);
 
         flipper_body_def.position = right_position;
-        const flipper_right = Box2dBody.init_old(world_id, ball_body_def);
+        const flipper_right = Box2dBody.init_old(world_id, flipper_body_def);
 
         const flipper_box = c.b2MakeBox(1.75, 0.2);
         _ = c.b2CreatePolygonShape(flipper_left.body_id, &flipper_shape_def, &flipper_box);
