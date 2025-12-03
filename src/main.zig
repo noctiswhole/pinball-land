@@ -51,21 +51,24 @@ pub fn main() anyerror!void {
 
     const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
 
-    var cappy: game.Cappy = try game.Cappy.load(allocator, &model_resource, world,  .{
+    var cappy: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
         .x = 0,
         .y = 10,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy2: game.Cappy = try game.Cappy.load(allocator, &model_resource, world,  .{
+    var cappy2: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
         .x = -3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy3: game.Cappy = try game.Cappy.load(allocator, &model_resource, world,  .{
+    var cappy3: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
         .x = 3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    cappy.init();
-    cappy2.init();
-    cappy3.init();
+    defer cappy.destroy(allocator);
+    defer cappy2.destroy(allocator);
+    defer cappy3.destroy(allocator);
+    defer cappy = null;
+    defer cappy2 = null;
+    defer cappy3 = null;
 
     const flipper_mesh = rl.genMeshCube(3.5 * B2D_TO_RL_RATIO, 0.4 * B2D_TO_RL_RATIO, 2);
     const flipper_model = try rl.loadModelFromMesh(flipper_mesh);

@@ -58,7 +58,7 @@ pub const Box2dBody = struct {
         return c.b2DefaultBodyDef();
     }
 
-    fn deinit(self: *Box2dBody) void {
+    pub fn deinit(self: *Box2dBody) void {
         c.b2DestroyBody(self.body_id);
     }
 

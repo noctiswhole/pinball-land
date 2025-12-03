@@ -22,16 +22,17 @@ pub const Cappy = struct {
     model: rl.Model,
     model_cap: rl.Model,
     health: i32,
-    tag: ?box2d.Tag,
+    tag: box2d.Tag,
 
-    pub fn load(allocator: std.mem.Allocator, model_resource: *ModelResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !Cappy {
+    pub fn create(allocator: std.mem.Allocator, model_resource: *ModelResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !*Cappy {
+        const cappy = try allocator.create(Cappy);
         var body_def = box2d.Box2dBody.default_body_def();
         body_def.position = box2d.vec2_rlToB2d(position);
         const body = box2d.Box2dBody.init(world, body_def);
         const model: rl.Model = try model_resource.load(allocator, model_path);
         const model_cap: rl.Model = try model_resource.load(allocator, model_cap_path);
         const animations: []rl.ModelAnimation = try rl.loadModelAnimations(model_path);
-        return .{
+        cappy.* = .{
             .animation = animations[0],
             .animation_frame_count = @intCast(animations[0].frameCount),
             .model = model,
@@ -40,17 +41,19 @@ pub const Cappy = struct {
             .body = body,
             .position = body.get_position(),
             .health = 2,
-            .tag = null,
-        };
-    }
-
-    pub fn init(self: *Cappy) void {
-        self.tag = .{
-            .entity = .{
-                .cappy = self,
+            .tag = box2d.Tag{
+                .entity = .{
+                    .cappy = cappy,
+                },
             },
         };
-        _ = box2d.create_circle_shape(self.body, 1.25, 1.25, &self.tag.?);
+        _ = box2d.create_circle_shape(body, 1.25, 1.25, &cappy.tag);
+        return cappy;
+    }
+
+    pub fn destroy(self: *Cappy, allocator: std.mem.Allocator) void {
+        self.body.deinit();
+        allocator.destroy(self);
     }
 
     pub fn update(self: *Cappy) void {
