@@ -1,6 +1,6 @@
 const rl = @import("raylib");
 const box2d = @import("box2d.zig");
-const game = @import("game.zig");
+const entities = @import("entities.zig");
 const std = @import("std");
 const resources = @import("resources.zig");
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -45,15 +45,15 @@ pub fn main() anyerror!void {
 
     const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
 
-    var cappy: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
+    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
         .x = 0,
         .y = 10,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy2: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
+    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
         .x = -3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy3: *game.Cappy = try game.Cappy.create(allocator, &model_resource, world,  .{
+    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
         .x = 3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
