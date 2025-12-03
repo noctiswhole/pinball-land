@@ -3,12 +3,13 @@ const box2d = @import("box2d.zig");
 const game = @import("game.zig");
 const std = @import("std");
 const resources = @import("resources.zig");
-
-const allocator = std.heap.page_allocator;
+var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+var allocator = arena.allocator();
 
 const GameState = struct {};
 
 pub fn main() anyerror!void {
+    defer arena.deinit();
     var model_resource = resources.ModelResource.init();
     defer model_resource.deinit(allocator);
     const screenWidth: i32 = 2560;
