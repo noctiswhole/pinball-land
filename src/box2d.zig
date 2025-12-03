@@ -3,12 +3,13 @@ const rl = @import("raylib");
 const c = @cImport({
     @cInclude("box2d/box2d.h");
 });
+const entities = @import("entities.zig");
 const std = @import("std");
 const PTM_RATIO: f32 = 50.0;
 pub const B2D_TO_RL_RATIO = 20;
 
 pub const Tag = struct {
-    name: [:0]const u8,
+    entity: entities.Entity,
 };
 
 pub fn vec2_rlToB2d(vec2: rl.Vector2) c.b2Vec2 {
@@ -25,7 +26,7 @@ fn vec2_b2dToRl(vec2: c.b2Vec2) rl.Vector2 {
     };
 }
 
-pub fn create_circle_shape(body: Box2dBody, radius: f32, restitution: f32, tag: *Tag) c.b2ShapeId {
+pub fn create_circle_shape(body: Box2dBody, radius: f32, restitution: f32, tag: *const Tag) c.b2ShapeId {
     const circle: c.b2Circle = .{
         .center = c.b2Vec2_zero,
         .radius = radius,
@@ -33,7 +34,7 @@ pub fn create_circle_shape(body: Box2dBody, radius: f32, restitution: f32, tag: 
     var shape_def: c.b2ShapeDef = c.b2DefaultShapeDef();
     shape_def.material.restitution = restitution;
     shape_def.enableContactEvents = true;
-    shape_def.userData = tag;
+    shape_def.userData = @ptrCast(@constCast(tag));
     return c.b2CreateCircleShape(body.body_id, &shape_def,&circle);
 }
 
@@ -261,9 +262,15 @@ pub const Box2dWorld = struct {
             const userdata_a: ?*Tag = @ptrCast(@alignCast(c.b2Shape_GetUserData(shape_a)));
             const userdata_b: ?*Tag = @ptrCast(@alignCast(c.b2Shape_GetUserData(shape_b)));
 
-            if (userdata_a != null or userdata_b != null) {
-                std.debug.print("Found contact at {d}", .{i});
-                return true;
+            if (userdata_a) |userdata| {
+                switch (userdata.entity) {
+                    inline else => |e| e.damage(),
+                }
+            }
+            if (userdata_b) |userdata| {
+                switch (userdata.entity) {
+                    inline else => |e| e.damage(),
+                }
             }
         }
         return false;
