@@ -66,9 +66,6 @@ pub fn main() anyerror!void {
     defer cappy.destroy(allocator);
     defer cappy2.destroy(allocator);
     defer cappy3.destroy(allocator);
-    defer cappy = null;
-    defer cappy2 = null;
-    defer cappy3 = null;
 
     const flipper_mesh = rl.genMeshCube(3.5 * B2D_TO_RL_RATIO, 0.4 * B2D_TO_RL_RATIO, 2);
     const flipper_model = try rl.loadModelFromMesh(flipper_mesh);
@@ -98,7 +95,7 @@ pub fn main() anyerror!void {
 
         const ball_position = world.ball_body.get_position();
         const ball_velocity = world.ball_body.get_velocity();
-        kirby_rot -= ball_velocity.x;
+        kirby_rot -= ball_velocity.x / box2d.B2D_TO_RL_RATIO;
         cappy.update();
         cappy2.update();
         cappy3.update();
@@ -124,8 +121,8 @@ pub fn main() anyerror!void {
             //     .z = 0,
             // }, 0.8 * B2D_TO_RL_RATIO, .red);
             rl.drawModelEx(kirby_model, .{
-                .x = ball_position.x * B2D_TO_RL_RATIO,
-                .y = ball_position.y * B2D_TO_RL_RATIO,
+                .x = ball_position.x,
+                .y = ball_position.y,
                 .z = 0,
             }, .{
                 .x = 0,
@@ -187,8 +184,8 @@ pub fn main() anyerror!void {
             const flipper_left = world.flipper_left;
             const flipper_rot = world.get_rotation_joint_left();
             rl.drawModelEx(flipper_model, .{
-                .x = flipper_left.get_position().x * B2D_TO_RL_RATIO,
-                .y = flipper_left.get_position().y * B2D_TO_RL_RATIO,
+                .x = flipper_left.get_position().x,
+                .y = flipper_left.get_position().y,
                 .z = 0,
             }, .{.x=0,.y=0,.z = 1}, flipper_rot * -1, .{
                 .x = 1,
@@ -200,8 +197,8 @@ pub fn main() anyerror!void {
             const flipper_right = world.flipper_right;
             const flipper_right_rot = world.get_rotation_joint_right();
             rl.drawModelEx(flipper_model, .{
-                .x = flipper_right.get_position().x * B2D_TO_RL_RATIO,
-                .y = flipper_right.get_position().y * B2D_TO_RL_RATIO,
+                .x = flipper_right.get_position().x,
+                .y = flipper_right.get_position().y,
                 .z = 0,
             }, .{.x=0,.y=0,.z = 1}, flipper_right_rot * -1, .{
                 .x = 1,
@@ -235,8 +232,8 @@ pub fn main() anyerror!void {
             defer rl.endMode2D();
 
             rl.drawCircleV(.{
-                .x = ball_position.x * B2D_TO_RL_RATIO,
-                .y = ball_position.y * B2D_TO_RL_RATIO * -1,
+                .x = ball_position.x,
+                .y = ball_position.y * -1,
             }, 1 * B2D_TO_RL_RATIO, .red);
             // Draw board
             rl.drawLineEx(.{
@@ -280,20 +277,20 @@ pub fn main() anyerror!void {
             rl.drawRectanglePro(.{
                 .height = 0.4 * B2D_TO_RL_RATIO,
                 .width = 3.5 * B2D_TO_RL_RATIO,
-                .x = flipper_left.get_position().x * B2D_TO_RL_RATIO,
-                .y = (flipper_left.get_position().y + 0.2) * B2D_TO_RL_RATIO * -1,
+                .x = flipper_left.get_position().x,
+                .y = (flipper_left.get_position().y + 0.2) * -1,
             }, .{
-                .x = 2.0 * B2D_TO_RL_RATIO,
+                .x = 2.0,
                 .y = 0,
             }, flipper_rot, .blue);
 
             const flipper_right = world.flipper_right;
             const flipper_right_rot = world.get_rotation_joint_right();
             rl.drawRectanglePro(.{
-                .height = 0.4 * B2D_TO_RL_RATIO,
-                .width = 3.5 * B2D_TO_RL_RATIO,
-                .x = flipper_right.get_position().x * B2D_TO_RL_RATIO,
-                .y = (flipper_right.get_position().y - 0.2) * B2D_TO_RL_RATIO * -1,
+                .height = 0.4,
+                .width = 3.5,
+                .x = flipper_right.get_position().x,
+                .y = (flipper_right.get_position().y - 0.2) * -1,
             }, .{
                 .x = 2.0 * B2D_TO_RL_RATIO,
                 .y = 0,

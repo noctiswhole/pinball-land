@@ -14,15 +14,15 @@ pub const Tag = struct {
 
 pub fn vec2_rlToB2d(vec2: rl.Vector2) c.b2Vec2 {
     return c.b2Vec2{
-        .x = vec2.x,
-        .y = vec2.y,
+        .x = vec2.x / B2D_TO_RL_RATIO,
+        .y = vec2.y / B2D_TO_RL_RATIO,
     };
 }
 // TODO: apply ratio to vector automatically....
 fn vec2_b2dToRl(vec2: c.b2Vec2) rl.Vector2 {
     return rl.Vector2{
-        .x = vec2.x,
-        .y = vec2.y,
+        .x = vec2.x * B2D_TO_RL_RATIO,
+        .y = vec2.y * B2D_TO_RL_RATIO,
     };
 }
 
@@ -140,10 +140,10 @@ pub const Box2dWorld = struct {
 
 
         var ball_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
-        ball_body_def.position = vec2_rlToB2d(.{
+        ball_body_def.position = .{
             .x = 0.5,
             .y = 0.0,
-        });
+        };
         ball_body_def.linearVelocity = .{
             .x = 0,
             .y = 0,

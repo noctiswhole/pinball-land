@@ -27,7 +27,10 @@ pub const Cappy = struct {
     pub fn create(allocator: std.mem.Allocator, model_resource: *ModelResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !*Cappy {
         const cappy = try allocator.create(Cappy);
         var body_def = box2d.Box2dBody.default_body_def();
-        body_def.position = box2d.vec2_rlToB2d(position);
+        body_def.position = .{
+            .x = position.x,
+            .y = position.y,
+        };
         const body = box2d.Box2dBody.init(world, body_def);
         const model: rl.Model = try model_resource.load(allocator, model_path);
         const model_cap: rl.Model = try model_resource.load(allocator, model_cap_path);
@@ -57,10 +60,7 @@ pub const Cappy = struct {
     }
 
     pub fn update(self: *Cappy) void {
-        self.position = .{
-            .x = self.body.get_position().x * box2d.B2D_TO_RL_RATIO,
-            .y = self.body.get_position().y * box2d.B2D_TO_RL_RATIO,
-        };
+        self.position = self.body.get_position();
 
         self.animation_current_frame = @mod(self.animation_current_frame + 1, self.animation_frame_count);
         rl.updateModelAnimation(self.model, self.animation, self.animation_current_frame);
