@@ -2,23 +2,22 @@ const rl = @import("raylib");
 const box2d = @import("box2d.zig");
 const game = @import("game.zig");
 const std = @import("std");
+const resources = @import("resources.zig");
+
+const allocator = std.heap.page_allocator;
 
 const GameState = struct {};
 
 pub fn main() anyerror!void {
+    var model_resource = resources.ModelResource.init();
+    defer model_resource.deinit(allocator);
     const screenWidth: i32 = 2560;
     const screenHeight: i32 = 1440;
     var world = box2d.Box2dWorld.init(rl.Vector2{ .x = 0, .y = -10.0 });
     defer world.deinit();
 
-
-    // const shader = rl.loadShader(null, "assets/shaders/bloom.fs.glsl") catch {
-    //     std.debug.print("idk man", .{});
-    //     @panic("idk man");
-    // };
-
-
     rl.initWindow(screenWidth, screenHeight, "Kirby Pinball Test");
+    defer rl.closeWindow();
     const shader_file = @embedFile("shaders/bloom.fs.glsl");
     const shader = try rl.loadShaderFromMemory(null, shader_file);
 
@@ -55,19 +54,26 @@ pub fn main() anyerror!void {
     var cappy_tag: box2d.Tag = .{
         .name = "cappy1"
     };
-    var cappy: game.Cappy = try game.Cappy.init(world,  .{
+    var cappy: game.Cappy = try game.Cappy.init(allocator, &model_resource, world,  .{
         .x = 0,
         .y = 10,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb", &cappy_tag);
+    var cappy2: game.Cappy = try game.Cappy.init(allocator, &model_resource, world,  .{
+        .x = -3,
+        .y = 13,
+    }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb", &cappy_tag);
+    var cappy3: game.Cappy = try game.Cappy.init(allocator, &model_resource, world,  .{
+        .x = 3,
+        .y = 13,
+    }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb", &cappy_tag);
+
     const flipper_mesh = rl.genMeshCube(3.5 * B2D_TO_RL_RATIO, 0.4 * B2D_TO_RL_RATIO, 2);
     const flipper_model = try rl.loadModelFromMesh(flipper_mesh);
 
     const render_texture = try rl.loadRenderTexture(screenWidth, screenHeight);
     rl.setTextureFilter(render_texture.texture, .anisotropic_16x);
-    // defer model.unload();
 
     rl.gl.rlSetClipPlanes(1000, 2000);
-    defer rl.closeWindow();
     rl.setTargetFPS(60);
     var kirby_rot: f32 = 0;
 
@@ -91,6 +97,8 @@ pub fn main() anyerror!void {
         const ball_velocity = world.ball_body.get_velocity();
         kirby_rot -= ball_velocity.x;
         cappy.update();
+        cappy2.update();
+        cappy3.update();
         if (world.check_contact_events()) {
             cappy.damage();
         }
@@ -100,9 +108,6 @@ pub fn main() anyerror!void {
 
         // Draw
         //----------------------------------------------------------------------------------
-
-
-
         {
             rl.beginTextureMode(render_texture);
             defer rl.endTextureMode();
@@ -201,6 +206,8 @@ pub fn main() anyerror!void {
                 .z = 1,
             }, .blue);
             cappy.draw();
+            cappy2.draw();
+            cappy3.draw();
         }
 
         rl.beginDrawing();
@@ -293,4 +300,8 @@ pub fn main() anyerror!void {
 
         //----------------------------------------------------------------------------------
     }
+}
+
+test {
+    _ = resources;
 }
