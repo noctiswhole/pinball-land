@@ -3,16 +3,6 @@ const rl = @import("raylib");
 const ModelResource = @import("resources.zig").ModelResource;
 const std = @import("std");
 
-const Pinball = struct {
-    world: box2d.Box2dWorld,
-    pub fn init() void {
-        const world = box2d.Box2dWorld.init(.{.x = 0, .y = -10.0});
-        return .{
-            .world = world,
-        };
-    }
-};
-
 pub const Cappy = struct {
     body: box2d.Box2dBody,
     animation_current_frame: i32,

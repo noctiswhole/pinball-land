@@ -21,13 +21,6 @@ pub fn main() anyerror!void {
     const shader_file = @embedFile("shaders/bloom.fs.glsl");
     const shader = try rl.loadShaderFromMemory(null, shader_file);
 
-    const camera: rl.Camera2D = .{
-        .target = .{ .x = -500, .y = -550 },
-        .zoom = 1.2,
-        .offset = .{ .x = 0, .y = 0 },
-        .rotation = 0,
-    };
-
     const camera3d: rl.Camera = .{
         .fovy = 20,
         .up = .{
@@ -103,9 +96,7 @@ pub fn main() anyerror!void {
             cappy.damage();
         }
 
-
         //----------------------------------------------------------------------------------
-
         // Draw
         //----------------------------------------------------------------------------------
         {
@@ -225,77 +216,6 @@ pub fn main() anyerror!void {
             }, .{ .x = 0, .y = 0 }, .white);
         }
 
-
-
-        if (false) {
-            rl.beginMode2D(camera);
-            defer rl.endMode2D();
-
-            rl.drawCircleV(.{
-                .x = ball_position.x,
-                .y = ball_position.y * -1,
-            }, 1 * B2D_TO_RL_RATIO, .red);
-            // Draw board
-            rl.drawLineEx(.{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO * -1,
-            }, .{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO * -1,
-            }, 2, .white);
-            rl.drawLineEx(.{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO * -1,
-            }, .{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO * -1,
-            }, 2, .white);
-            rl.drawLineEx(.{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO * -1,
-            }, .{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO * -1,
-            }, 2, .white);
-            rl.drawLineEx(.{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO * -1,
-            }, .{
-                .x = 0 * B2D_TO_RL_RATIO,
-                .y = -2.0 * B2D_TO_RL_RATIO * -1,
-            }, 2, .white);
-            rl.drawLineEx(.{
-                .x = 0 * B2D_TO_RL_RATIO,
-                .y = -2.0 * B2D_TO_RL_RATIO * -1,
-            }, .{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO * -1,
-            }, 2, .white);
-
-            const flipper_left = world.flipper_left;
-            const flipper_rot = world.get_rotation_joint_left();
-            rl.drawRectanglePro(.{
-                .height = 0.4 * B2D_TO_RL_RATIO,
-                .width = 3.5 * B2D_TO_RL_RATIO,
-                .x = flipper_left.get_position().x,
-                .y = (flipper_left.get_position().y + 0.2) * -1,
-            }, .{
-                .x = 2.0,
-                .y = 0,
-            }, flipper_rot, .blue);
-
-            const flipper_right = world.flipper_right;
-            const flipper_right_rot = world.get_rotation_joint_right();
-            rl.drawRectanglePro(.{
-                .height = 0.4,
-                .width = 3.5,
-                .x = flipper_right.get_position().x,
-                .y = (flipper_right.get_position().y - 0.2) * -1,
-            }, .{
-                .x = 2.0 * B2D_TO_RL_RATIO,
-                .y = 0,
-            }, flipper_right_rot, .blue);
-        }
         rl.drawText("Pinball Test", 10, 10, 20, .white);
 
         //----------------------------------------------------------------------------------
