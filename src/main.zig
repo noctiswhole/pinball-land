@@ -10,8 +10,10 @@ const GameState = struct {};
 
 pub fn main() anyerror!void {
     defer arena.deinit();
-    var model_resource = resources.ModelResource.init();
+    var model_resource = resources.model_resource;
     defer model_resource.deinit(allocator);
+    var shader_resource = resources.shader_resource;
+    defer shader_resource.deinit(allocator);
     const screenWidth: i32 = 2560;
     const screenHeight: i32 = 1440;
     var world = box2d.Box2dWorld.init(rl.Vector2{ .x = 0, .y = -10.0 });
@@ -19,8 +21,8 @@ pub fn main() anyerror!void {
 
     rl.initWindow(screenWidth, screenHeight, "Kirby Pinball Test");
     defer rl.closeWindow();
-    const shader_file = @embedFile("shaders/bloom.fs.glsl");
-    const shader = try rl.loadShaderFromMemory(null, shader_file);
+    const bloom_shader_file = @embedFile("shaders/bloom.fs.glsl");
+    const bloom_shader = try rl.loadShaderFromMemory(null, bloom_shader_file);
 
     const camera3d: rl.Camera = .{
         .fovy = 20,
@@ -43,17 +45,21 @@ pub fn main() anyerror!void {
     };
     const B2D_TO_RL_RATIO = 20;
 
-    const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
+    const shader: rl.Shader = try shader_resource.load(allocator,"src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
 
-    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
+    const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
+    for (0..@intCast(kirby_model.materialCount)) |i| {
+        kirby_model.materials[i].shader = shader;
+    }
+    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
         .x = 0,
-        .y = 10,
+        .y = 16,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
+    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
         .x = -3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, world,  .{
+    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
         .x = 3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
@@ -207,7 +213,7 @@ pub fn main() anyerror!void {
         rl.clearBackground(.black);
 
         {
-            rl.beginShaderMode(shader);
+            rl.beginShaderMode(bloom_shader);
             defer rl.endShaderMode();
             rl.drawTextureRec(render_texture.texture, .{
                 .height = -screenHeight,

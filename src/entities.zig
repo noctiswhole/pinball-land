@@ -1,6 +1,8 @@
 const box2d = @import("box2d.zig");
 const rl = @import("raylib");
-const ModelResource = @import("resources.zig").ModelResource;
+const resources = @import("resources.zig");
+const ModelResource = resources.ModelResource;
+const ShaderResource = resources.ShaderResource;
 const std = @import("std");
 
 pub const Entity = union(enum) {
@@ -18,7 +20,7 @@ pub const Cappy = struct {
     health: i32,
     tag: box2d.Tag,
 
-    pub fn create(allocator: std.mem.Allocator, model_resource: *ModelResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !*Cappy {
+    pub fn create(allocator: std.mem.Allocator, model_resource: *ModelResource, shader_resource: *ShaderResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !*Cappy {
         const cappy = try allocator.create(Cappy);
         var body_def = box2d.Box2dBody.default_body_def();
         body_def.position = .{
@@ -29,6 +31,13 @@ pub const Cappy = struct {
         const model: rl.Model = try model_resource.load(allocator, model_path);
         const model_cap: rl.Model = try model_resource.load(allocator, model_cap_path);
         const animations: []rl.ModelAnimation = try rl.loadModelAnimations(model_path);
+        const shader: rl.Shader = try shader_resource.load(allocator,"src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
+        for (0..@intCast(model.materialCount)) |i| {
+            model.materials[i].shader = shader;
+        }
+        for (0..@intCast(model_cap.materialCount)) |i| {
+            model_cap.materials[i].shader = shader;
+        }
         cappy.* = .{
             .animation = animations[0],
             .animation_frame_count = @intCast(animations[0].frameCount),
