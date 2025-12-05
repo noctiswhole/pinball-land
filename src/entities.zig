@@ -39,7 +39,7 @@ pub const Cappy = struct {
         const model: rl.Model = try model_resource.load(allocator, model_path);
         const model_cap: rl.Model = try model_resource.load(allocator, model_cap_path);
         const animations: []rl.ModelAnimation = try rl.loadModelAnimations(model_path);
-        const shader: rl.Shader = try shader_resource.load(allocator, "src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
+        const shader: rl.Shader = try shader_resource.load(allocator, "assets/shaders/cell.vs.glsl", "assets/shaders/cell.fs.glsl");
         for (0..@intCast(model.materialCount)) |i| {
             model.materials[i].shader = shader;
         }

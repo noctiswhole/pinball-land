@@ -21,8 +21,7 @@ pub fn main() anyerror!void {
 
     rl.initWindow(screenWidth, screenHeight, "Kirby Pinball Test");
     defer rl.closeWindow();
-    const bloom_shader_file = @embedFile("shaders/bloom.fs.glsl");
-    const bloom_shader = try rl.loadShaderFromMemory(null, bloom_shader_file);
+    const bloom_shader = try shader_resource.load(allocator, null, "assets/shaders/bloom.fs.glsl");
 
     const camera3d: rl.Camera = .{
         .fovy = 20,
@@ -45,7 +44,7 @@ pub fn main() anyerror!void {
     };
     const B2D_TO_RL_RATIO = 20;
 
-    const shader: rl.Shader = try shader_resource.load(allocator, "src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
+    const shader: rl.Shader = try shader_resource.load(allocator, "assets/shaders/cell.vs.glsl", "assets/shaders/cell.fs.glsl");
 
     const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
     for (0..@intCast(kirby_model.materialCount)) |i| {

@@ -25,7 +25,7 @@ fn unloadResource(T: type, list: *std.StringArrayHashMapUnmanaged(T)) void {
 pub const ShaderResource = struct {
     shader_list: ShaderList,
 
-    pub fn load(self: *ShaderResource, allocator: std.mem.Allocator, vs_shader_path: [:0]const u8, fs_shader_path: [:0]const u8) !rl.Shader {
+    pub fn load(self: *ShaderResource, allocator: std.mem.Allocator, vs_shader_path: ?[:0]const u8, fs_shader_path: [:0]const u8) !rl.Shader {
         if (self.shader_list.get(fs_shader_path)) |shader| {
             return shader;
         } else {
