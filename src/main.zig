@@ -3,7 +3,7 @@ const box2d = @import("box2d.zig");
 const entities = @import("entities.zig");
 const std = @import("std");
 const resources = @import("resources.zig");
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+var arena = std.heap.ArenaAllocator.init(std.heap.smp_allocator);
 var allocator = arena.allocator();
 
 const GameState = struct {};
