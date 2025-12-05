@@ -20,7 +20,15 @@ pub const Cappy = struct {
     health: i32,
     tag: box2d.Tag,
 
-    pub fn create(allocator: std.mem.Allocator, model_resource: *ModelResource, shader_resource: *ShaderResource, world: box2d.Box2dWorld, position: rl.Vector2, model_path: [:0]const u8, model_cap_path: [:0]const u8) !*Cappy {
+    pub fn create(
+        allocator: std.mem.Allocator,
+        model_resource: *ModelResource,
+        shader_resource: *ShaderResource,
+        world: box2d.Box2dWorld,
+        position: rl.Vector2,
+        model_path: [:0]const u8,
+        model_cap_path: [:0]const u8
+    ) !*Cappy {
         const cappy = try allocator.create(Cappy);
         var body_def = box2d.Box2dBody.default_body_def();
         body_def.position = .{

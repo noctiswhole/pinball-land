@@ -51,18 +51,42 @@ pub fn main() anyerror!void {
     for (0..@intCast(kirby_model.materialCount)) |i| {
         kirby_model.materials[i].shader = shader;
     }
-    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
-        .x = 0,
-        .y = 16,
-    }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
-        .x = -3,
-        .y = 13,
-    }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
-        .x = 3,
-        .y = 13,
-    }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
+    var cappy: *entities.Cappy = try entities.Cappy.create(
+        allocator,
+        &model_resource,
+        &shader_resource,
+        world,
+        .{
+            .x = 0,
+            .y = 16,
+        },
+        "assets/models/cappy.glb",
+        "assets/models/cappy_cap.glb"
+    );
+    var cappy2: *entities.Cappy = try entities.Cappy.create(
+        allocator,
+        &model_resource,
+        &shader_resource,
+        world,
+        .{
+            .x = -3,
+            .y = 13,
+        },
+        "assets/models/cappy.glb",
+        "assets/models/cappy_cap.glb"
+    );
+    var cappy3: *entities.Cappy = try entities.Cappy.create(
+        allocator,
+        &model_resource,
+        &shader_resource,
+        world,
+        .{
+            .x = 3,
+            .y = 13,
+        },
+        "assets/models/cappy.glb",
+        "assets/models/cappy_cap.glb"
+    );
     defer cappy.destroy(allocator);
     defer cappy2.destroy(allocator);
     defer cappy3.destroy(allocator);
