@@ -1,4 +1,3 @@
-
 const rl = @import("raylib");
 const c = @cImport({
     @cInclude("box2d/box2d.h");
@@ -35,7 +34,7 @@ pub fn create_circle_shape(body: Box2dBody, radius: f32, restitution: f32, tag: 
     shape_def.material.restitution = restitution;
     shape_def.enableContactEvents = true;
     shape_def.userData = @ptrCast(@constCast(tag));
-    return c.b2CreateCircleShape(body.body_id, &shape_def,&circle);
+    return c.b2CreateCircleShape(body.body_id, &shape_def, &circle);
 }
 
 pub const Box2dBody = struct {
@@ -137,8 +136,6 @@ pub const Box2dWorld = struct {
             _ = c.b2CreateChain(ground_body.body_id, &body_chain_def);
         }
 
-
-
         var ball_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
         ball_body_def.position = .{
             .x = 0.5,
@@ -157,7 +154,7 @@ pub const Box2dWorld = struct {
             ball_shape_def.enableContactEvents = true;
             const ball_circle: c.b2Circle = .{
                 .radius = 1,
-                .center = .{.x = 0, .y = 0},
+                .center = .{ .x = 0, .y = 0 },
             };
             ball_shape_def.density = 0.1;
             _ = c.b2CreateCircleShape(ball_body.body_id, &ball_shape_def, &ball_circle);
@@ -254,7 +251,7 @@ pub const Box2dWorld = struct {
 
     // hack to make thing work
     pub fn check_contact_events(self: *Box2dWorld) bool {
-        const contactEvents: c.b2ContactEvents = c.b2World_GetContactEvents( self.world_id );
+        const contactEvents: c.b2ContactEvents = c.b2World_GetContactEvents(self.world_id);
         for (0..@intCast(contactEvents.beginCount)) |i| {
             const event = contactEvents.beginEvents[i];
             const shape_a = event.shapeIdA;
@@ -276,4 +273,3 @@ pub const Box2dWorld = struct {
         return false;
     }
 };
-

@@ -45,21 +45,21 @@ pub fn main() anyerror!void {
     };
     const B2D_TO_RL_RATIO = 20;
 
-    const shader: rl.Shader = try shader_resource.load(allocator,"src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
+    const shader: rl.Shader = try shader_resource.load(allocator, "src/shaders/cell.vs.glsl", "src/shaders/cell.fs.glsl");
 
     const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
     for (0..@intCast(kirby_model.materialCount)) |i| {
         kirby_model.materials[i].shader = shader;
     }
-    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
+    var cappy: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
         .x = 0,
         .y = 16,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
+    var cappy2: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
         .x = -3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
-    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world,  .{
+    var cappy3: *entities.Cappy = try entities.Cappy.create(allocator, &model_resource, &shader_resource, world, .{
         .x = 3,
         .y = 13,
     }, "assets/models/cappy.glb", "assets/models/cappy_cap.glb");
@@ -185,12 +185,11 @@ pub fn main() anyerror!void {
                 .x = flipper_left.get_position().x,
                 .y = flipper_left.get_position().y,
                 .z = 0,
-            }, .{.x=0,.y=0,.z = 1}, flipper_rot * -1, .{
+            }, .{ .x = 0, .y = 0, .z = 1 }, flipper_rot * -1, .{
                 .x = 1,
                 .y = 1,
                 .z = 1,
             }, .blue);
-
 
             const flipper_right = world.flipper_right;
             const flipper_right_rot = world.get_rotation_joint_right();
@@ -198,7 +197,7 @@ pub fn main() anyerror!void {
                 .x = flipper_right.get_position().x,
                 .y = flipper_right.get_position().y,
                 .z = 0,
-            }, .{.x=0,.y=0,.z = 1}, flipper_right_rot * -1, .{
+            }, .{ .x = 0, .y = 0, .z = 1 }, flipper_right_rot * -1, .{
                 .x = 1,
                 .y = 1,
                 .z = 1,
