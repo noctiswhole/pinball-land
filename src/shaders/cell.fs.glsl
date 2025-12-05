@@ -50,6 +50,4 @@ void main () {
             finalColor = vec4(vec3(tex) * vec3(0.5, 0.65, 0.65), 1.0);
         }
     }
-
-//    finalColor = vec4(vec3(ndotv), 1.0);
 }

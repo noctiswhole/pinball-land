@@ -21,11 +21,6 @@ out vec3 modNorm;
 //uniform vec3 viewPos;
 void main()
 {
-    /*
-                .x = 0,
-            .y = 180,
-            .z = 1700,
-            */
     vec3 viewPos = vec3(0, 180, 1700);
     // Send vertex attributes to fragment shader
     fragTexCoord = vertexTexCoord;
