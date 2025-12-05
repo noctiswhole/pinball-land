@@ -15,6 +15,13 @@ pub const model_resource: ModelResource = .{
     .model_list = ModelList.empty,
 };
 
+fn unloadResource(T: type, list: *std.StringArrayHashMapUnmanaged(T)) void {
+    var it = list.iterator();
+    while (it.next()) |entry| {
+        entry.value_ptr.unload();
+    }
+}
+
 pub const ShaderResource = struct {
     shader_list: ShaderList,
 
@@ -29,10 +36,7 @@ pub const ShaderResource = struct {
     }
 
     pub fn deinit(self: *ShaderResource, allocator: std.mem.Allocator) void {
-        var it = self.shader_list.iterator();
-        while (it.next()) |entry| {
-            entry.value_ptr.unload();
-        }
+        unloadResource(rl.Shader, &self.shader_list);
         self.shader_list.deinit(allocator);
     }
 };
@@ -51,10 +55,7 @@ pub const ModelResource = struct {
     }
 
     pub fn deinit(self: *ModelResource, allocator: std.mem.Allocator) void {
-        var it = self.model_list.iterator();
-        while (it.next()) |entry| {
-            entry.value_ptr.unload();
-        }
+        unloadResource(rl.Model, &self.model_list);
         self.model_list.deinit(allocator);
     }
 };
