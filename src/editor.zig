@@ -44,7 +44,7 @@ pub fn main() !void {
     defer win.deinit();
 
     const camera3d: rl.Camera = .{
-        .fovy = 600,
+        .fovy = 30,
         .up = .{
             .x = 0,
             .y = 1,
@@ -53,12 +53,12 @@ pub fn main() !void {
         .projection = .orthographic,
         .position = .{
             .x = 0,
-            .y = 180,
-            .z = 1700,
+            .y = 12,
+            .z = 20,
         },
         .target = .{
             .x = 0,
-            .y = 230,
+            .y = 12,
             .z = 0,
         },
     };
