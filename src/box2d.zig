@@ -4,24 +4,21 @@ const c = @cImport({
 });
 const entities = @import("entities.zig");
 const std = @import("std");
-const PTM_RATIO: f32 = 50.0;
-pub const B2D_TO_RL_RATIO = 20;
-
 pub const Tag = struct {
     entity: entities.Entity,
 };
 
 pub fn vec2_rlToB2d(vec2: rl.Vector2) c.b2Vec2 {
     return c.b2Vec2{
-        .x = vec2.x / B2D_TO_RL_RATIO,
-        .y = vec2.y / B2D_TO_RL_RATIO,
+        .x = vec2.x,
+        .y = vec2.y,
     };
 }
 // TODO: apply ratio to vector automatically....
 fn vec2_b2dToRl(vec2: c.b2Vec2) rl.Vector2 {
     return rl.Vector2{
-        .x = vec2.x * B2D_TO_RL_RATIO,
-        .y = vec2.y * B2D_TO_RL_RATIO,
+        .x = vec2.x,
+        .y = vec2.y,
     };
 }
 

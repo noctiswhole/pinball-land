@@ -33,17 +33,15 @@ pub fn main() anyerror!void {
         .projection = .perspective,
         .position = .{
             .x = 0,
-            .y = 180,
-            .z = 1700,
+            .y = 10,
+            .z = 100,
         },
         .target = .{
             .x = 0,
-            .y = 230,
+            .y = 13,
             .z = 0,
         },
     };
-    const B2D_TO_RL_RATIO = 20;
-
     const shader: rl.Shader = try shader_resource.load(allocator, "assets/shaders/cell.vs.glsl", "assets/shaders/cell.fs.glsl");
 
     const kirby_model = try rl.loadModel("assets/models/kirby_pinballin.glb");
@@ -90,13 +88,13 @@ pub fn main() anyerror!void {
     defer cappy2.destroy(allocator);
     defer cappy3.destroy(allocator);
 
-    const flipper_mesh = rl.genMeshCube(3.5 * B2D_TO_RL_RATIO, 0.4 * B2D_TO_RL_RATIO, 2);
+    const flipper_mesh = rl.genMeshCube(3.5, 0.4, 2);
     const flipper_model = try rl.loadModelFromMesh(flipper_mesh);
 
     const render_texture = try rl.loadRenderTexture(screenWidth, screenHeight);
     rl.setTextureFilter(render_texture.texture, .anisotropic_16x);
 
-    rl.gl.rlSetClipPlanes(1000, 2000);
+    // rl.gl.rlSetClipPlanes(0, 1000);
     rl.setTargetFPS(60);
     var kirby_rot: f32 = 0;
 
@@ -118,7 +116,7 @@ pub fn main() anyerror!void {
 
         const ball_position = world.ball_body.get_position();
         const ball_velocity = world.ball_body.get_velocity();
-        kirby_rot -= ball_velocity.x / box2d.B2D_TO_RL_RATIO;
+        kirby_rot -= ball_velocity.x;
         cappy.update();
         cappy2.update();
         cappy3.update();
@@ -137,10 +135,10 @@ pub fn main() anyerror!void {
             rl.clearBackground(.black);
             // const cappy_pos = cappy.body.get_position();
             // rl.drawSphere(.{
-            //     .x = cappy_pos.x * B2D_TO_RL_RATIO,
-            //     .y = cappy_pos.y * B2D_TO_RL_RATIO,
+            //     .x = cappy_pos.x,
+            //     .y = cappy_pos.y,
             //     .z = 0,
-            // }, 0.8 * B2D_TO_RL_RATIO, .red);
+            // }, 0.8, .red);
             rl.drawModelEx(kirby_model, .{
                 .x = ball_position.x,
                 .y = ball_position.y,
@@ -150,55 +148,55 @@ pub fn main() anyerror!void {
                 .y = 0,
                 .z = 1,
             }, kirby_rot, .{
-                .x = 20,
-                .y = 20,
-                .z = 20,
+                .x = 1,
+                .y = 1,
+                .z = 1,
             }, .white);
 
             // Draw board
             rl.drawLine3D(.{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO,
+                .x = -10.0,
+                .y = 3.0,
                 .z = 0,
             }, .{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO,
+                .x = -10.0,
+                .y = 25.0,
                 .z = 0,
             }, .white);
             rl.drawLine3D(.{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO,
+                .x = -10.0,
+                .y = 25.0,
                 .z = 0,
             }, .{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO,
+                .x = 10.0,
+                .y = 25.0,
                 .z = 0,
             }, .white);
             rl.drawLine3D(.{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 25.0 * B2D_TO_RL_RATIO,
+                .x = 10.0,
+                .y = 25.0,
                 .z = 0,
             }, .{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO,
+                .x = 10.0,
+                .y = 3.0,
                 .z = 0,
             }, .white);
             rl.drawLine3D(.{
-                .x = 10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO,
+                .x = 10.0,
+                .y = 3.0,
                 .z = 0,
             }, .{
-                .x = 0 * B2D_TO_RL_RATIO,
-                .y = -2.0 * B2D_TO_RL_RATIO,
+                .x = 0,
+                .y = -2.0,
                 .z = 0,
             }, .white);
             rl.drawLine3D(.{
-                .x = 0 * B2D_TO_RL_RATIO,
-                .y = -2.0 * B2D_TO_RL_RATIO,
+                .x = 0,
+                .y = -2.0,
                 .z = 0,
             }, .{
-                .x = -10.0 * B2D_TO_RL_RATIO,
-                .y = 3.0 * B2D_TO_RL_RATIO,
+                .x = -10.0,
+                .y = 3.0,
                 .z = 0,
             }, .white);
 

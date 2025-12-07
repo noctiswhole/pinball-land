@@ -89,15 +89,15 @@ pub const Cappy = struct {
         if (self.health > 0) {
             rl.drawModel(self.model, .{
                 .x = self.position.x,
-                .y = self.position.y - 20,
+                .y = self.position.y - 1,
                 .z = 0,
-            }, 20, .white);
+            }, 1, .white);
             if (self.health == 2) {
                 rl.drawModel(self.model_cap, .{
                     .x = self.position.x,
-                    .y = self.position.y - 20,
+                    .y = self.position.y - 1,
                     .z = 0,
-                }, 20, .white);
+                }, 1, .white);
             }
         }
     }

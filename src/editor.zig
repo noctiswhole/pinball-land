@@ -1,7 +1,7 @@
 const std = @import("std");
 const dvui = @import("dvui");
 const RaylibBackend = @import("raylib-zig-backend");
-pub const raylib = RaylibBackend.raylib;
+pub const rl = RaylibBackend.raylib;
 pub const raygui = RaylibBackend.raygui;
 
 comptime {
@@ -25,12 +25,12 @@ pub fn main() !void {
     defer _ = gpa_instance.deinit();
 
     // create OS window directly with raylib
-    raylib.setConfigFlags(.{
+    rl.setConfigFlags(.{
         .window_resizable = true,
         .vsync_hint = true,
     });
-    raylib.initWindow(800, 600, "DVUI Raylib Ontop Example");
-    defer raylib.closeWindow();
+    rl.initWindow(1920, 1080, "DVUI Raylib Ontop Example");
+    defer rl.closeWindow();
 
     // init Raylib backend
     // init() means the app owns the window (and must call CloseWindow itself)
@@ -43,11 +43,82 @@ pub fn main() !void {
     var win = try dvui.Window.init(@src(), gpa, backend.backend(), .{});
     defer win.deinit();
 
+    const camera3d: rl.Camera = .{
+        .fovy = 600,
+        .up = .{
+            .x = 0,
+            .y = 1,
+            .z = 0,
+        },
+        .projection = .orthographic,
+        .position = .{
+            .x = 0,
+            .y = 180,
+            .z = 1700,
+        },
+        .target = .{
+            .x = 0,
+            .y = 230,
+            .z = 0,
+        },
+    };
+
     var selected_color: dvui.Color = dvui.Color.white;
 
-    while (!raylib.windowShouldClose()) {
-        raylib.beginDrawing();
+    while (!rl.windowShouldClose()) {
+        rl.beginDrawing();
+        rl.clearBackground(RaylibBackend.dvuiColorToRaylib(dvui.Color.black));
+        {
+            rl.beginMode3D(camera3d);
+            defer rl.endMode3D();
 
+            // Draw board
+                rl.drawLine3D(.{
+            .x = -10.0,
+            .y = 3.0,
+            .z = 0,
+        }, .{
+            .x = -10.0,
+            .y = 25.0,
+            .z = 0,
+        }, .white);
+            rl.drawLine3D(.{
+                .x = -10.0,
+                .y = 25.0,
+                .z = 0,
+            }, .{
+                .x = 10.0,
+                .y = 25.0,
+                .z = 0,
+            }, .white);
+            rl.drawLine3D(.{
+                .x = 10.0,
+                .y = 25.0,
+                .z = 0,
+            }, .{
+                .x = 10.0,
+                .y = 3.0,
+                .z = 0,
+            }, .white);
+            rl.drawLine3D(.{
+                .x = 10.0,
+                .y = 3.0,
+                .z = 0,
+            }, .{
+                .x = 0,
+                .y = -2.0,
+                .z = 0,
+            }, .white);
+            rl.drawLine3D(.{
+                .x = 0,
+                .y = -2.0,
+                .z = 0,
+            }, .{
+                .x = -10.0,
+                .y = 3.0,
+                .z = 0,
+            }, .white);
+        }
         // marks the beginning of a frame for dvui, can call dvui functions after this
         try win.begin(std.time.nanoTimestamp());
 
@@ -63,7 +134,6 @@ pub fn main() !void {
         }
         // if dvui widgets might not cover the whole window, then need to clear
         // the previous frame's render
-        raylib.clearBackground(RaylibBackend.dvuiColorToRaylib(dvui.Color.black));
 
         {
             var b = dvui.box(@src(), .{}, .{ .expand = .horizontal, .margin = .{ .x = 10 } });
@@ -80,7 +150,7 @@ pub fn main() !void {
             }
         }
 
-        raylib.drawText("Congrats! You Combined Raylib (raylib-zig), Raygui and DVUI!", 20, 400, 20, raylib.Color.white);
+        rl.drawText("Congrats! You Combined Raylib (raylib-zig), Raygui and DVUI!", 20, 400, 20, rl.Color.white);
 
         dvuiStuff();
 
@@ -97,7 +167,7 @@ pub fn main() !void {
             backend.setCursor(.arrow);
         }
 
-        raylib.endDrawing();
+        rl.endDrawing();
     }
 }
 
@@ -108,13 +178,13 @@ fn colorPicker(result: *dvui.Color) void {
         defer overlay.deinit();
 
         const bounds = overlay.data().contentRectScale().r;
-        const ray_bounds: raylib.Rectangle = .{
+        const ray_bounds: rl.Rectangle = .{
             .x = bounds.x,
             .y = bounds.y,
             .width = bounds.w,
             .height = bounds.h,
         };
-        var c_color: raylib.Color = RaylibBackend.dvuiColorToRaylib(result.*);
+        var c_color: rl.Color = RaylibBackend.dvuiColorToRaylib(result.*);
         _ = raygui.colorPicker(ray_bounds, "Pick Color", &c_color);
         result.* = RaylibBackend.raylibColorToDvui(c_color);
     }
