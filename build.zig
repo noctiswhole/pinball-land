@@ -16,9 +16,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const raylib = raylib_dep.module("raylib"); // main raylib module
-    const raygui = raylib_dep.module("raygui"); // raygui module
-    const raylib_artifact = raylib_dep.artifact("raylib"); // raylib C library
+    const raylib = raylib_dep.module("raylib");
+    const raygui = raylib_dep.module("raygui");
+    const raylib_artifact = raylib_dep.artifact("raylib");
 
     const exe = b.addExecutable(.{
         .name = "kirbys_pinball_land_dx_zig",
@@ -40,10 +40,42 @@ pub fn build(b: *std.Build) void {
 
     const run_step = b.step("run", "Run the app");
 
+    // Editor setup
+    const dvui_dep = b.dependency("dvui", .{
+        .target = target,
+        .optimize = optimize,
+        .backend = .raylib_zig,
+    });
+    const backend_mod = dvui_dep.module("raylib_zig");
+    backend_mod.addImport("raylib", raylib); // from your raylib dependency
+    backend_mod.addImport("raygui", raygui);
+
     const run_cmd = b.addRunArtifact(exe);
     run_step.dependOn(&run_cmd.step);
-
     run_cmd.step.dependOn(b.getInstallStep());
+
+    const editor_exe = b.addExecutable(.{
+        .name = "kirbys_pinball_land_dx_editor",
+        .use_llvm = true,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/editor.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "raylib", .module = raylib },
+                .{ .name = "raygui", .module = raygui },
+                .{ .name = "dvui", .module = dvui_dep.module("dvui_raylib_zig")},
+                .{ .name = "raylib-zig-backend", .module = backend_mod},
+            },
+        }),
+    });
+
+    const editor_run_step = b.step("editor", "Run the editor");
+
+    const editor_run_cmd = b.addRunArtifact(editor_exe);
+    editor_run_step.dependOn(&editor_run_cmd.step);
+    editor_run_cmd.step.dependOn(b.getInstallStep());
+    b.installArtifact(editor_exe);
 
     // This allows the user to pass arguments to the application in the build
     // command itself, like this: `zig build run -- arg1 arg2 etc`

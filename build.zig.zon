@@ -40,6 +40,10 @@
             .url = "git+https://github.com/allyourcodebase/box2d?ref=main#0482245bf59bec743a7cb29961a480c3f7497f0c",
             .hash = "box2d-3.1.1-crFBk74aAAD-TJGY5mHVDB0sV5JntTq0MnlaHYxb5yl5",
         },
+        .dvui = .{
+            .url = "git+https://github.com/david-vanderson/dvui?ref=main#43a4efcfd05f82abb354a9de08fe222419faa37f",
+            .hash = "dvui-0.4.0-dev-AQFJmbP22QCoMPgWnD8kZRo3frzOoP-Eo14k179FhuSe",
+        },
     },
     .paths = .{
         "build.zig",
