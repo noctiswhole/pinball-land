@@ -3,6 +3,7 @@ const box2d = @import("box2d.zig");
 const entities = @import("entities.zig");
 const std = @import("std");
 const resources = @import("resources.zig");
+const Level = @import("game/Level.zig");
 var arena = std.heap.ArenaAllocator.init(std.heap.smp_allocator);
 var allocator = arena.allocator();
 
@@ -14,9 +15,13 @@ pub fn main() anyerror!void {
     defer model_resource.deinit(allocator);
     var shader_resource = resources.shader_resource;
     defer shader_resource.deinit(allocator);
+    var level: Level = .{};
+
+    try level.loadPoints(allocator);
     const screenWidth: i32 = 2560;
     const screenHeight: i32 = 1440;
-    var world = box2d.Box2dWorld.init(rl.Vector2{ .x = 0, .y = -10.0 });
+    var world = try box2d.Box2dWorld.init(allocator, &level, rl.Vector2{ .x = 0, .y = -10.0 });
+
     defer world.deinit();
 
     rl.initWindow(screenWidth, screenHeight, "Kirby Pinball Test");
@@ -153,52 +158,7 @@ pub fn main() anyerror!void {
                 .z = 1,
             }, .white);
 
-            // Draw board
-            rl.drawLine3D(.{
-                .x = -10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .{
-                .x = -10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = -10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .{
-                .x = 10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .{
-                .x = 10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .{
-                .x = 0,
-                .y = -2.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 0,
-                .y = -2.0,
-                .z = 0,
-            }, .{
-                .x = -10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .white);
+            level.drawPoints();
 
             const flipper_left = world.flipper_left;
             const flipper_rot = world.get_rotation_joint_left();

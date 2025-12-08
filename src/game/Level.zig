@@ -32,6 +32,7 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 }
 
 pub fn drawPoints(self: Level) void {
+    // TODO: unify iteration with a iterator
     const len = self.point_list.items.len;
     if (len < 2) {
         return;

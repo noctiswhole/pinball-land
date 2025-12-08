@@ -4,6 +4,7 @@ const c = @cImport({
 });
 const entities = @import("entities.zig");
 const std = @import("std");
+const Level = @import("game/Level.zig");
 pub const Tag = struct {
     entity: entities.Entity,
 };
@@ -83,7 +84,28 @@ pub const Box2dWorld = struct {
     flipper_left_joint_id: c.b2JointId,
     flipper_right_joint_id: c.b2JointId,
 
-    pub fn init(gravity: rl.Vector2) Box2dWorld {
+    pub fn init(allocator: std.mem.Allocator, level: *Level, gravity: rl.Vector2) !Box2dWorld {
+        // TODO: separate to per-frame allocator
+        var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, level.point_list.items.len * 2);
+        // defer vs_list.deinit(allocator);
+
+        // TODO: organize this better so that the world collision doesn't need to happen in the init function
+        const len = level.point_list.items.len;
+
+        for(level.point_list.items) |point| {
+            vs_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
+            std.debug.print("x {d} y {d}\n", .{point.x, point.y});
+        }
+
+        var index = len;
+        while (index > 0) {
+            index -= 1;
+            const mirrored_point = level.point_list.items[index].mirror();
+            vs_list.appendAssumeCapacity(.{.x = mirrored_point.x, .y = mirrored_point.y});
+            std.debug.print("x {d} y {d}\n", .{mirrored_point.x, mirrored_point.y});
+
+        }
+
         const gravity_dto: c.b2Vec2 = .{
             .x = gravity.x,
             .y = gravity.y,
@@ -97,36 +119,38 @@ pub const Box2dWorld = struct {
 
         const ground_body = Box2dBody.init_old(world_id, ground_body_def);
         {
-            const GROUND_BODY_COUNT = 5;
-            const vs: [GROUND_BODY_COUNT]c.b2Vec2 = .{
-                .{
-                    .x = -10.0,
-                    .y = 3.0,
-                },
-                .{
-                    .x = -10.0,
-                    .y = 25.0,
-                },
-                .{
-                    .x = 10.0,
-                    .y = 25.0,
-                },
-                .{
-                    .x = 10.0,
-                    .y = 3.0,
-                },
-                .{
-                    .x = 0,
-                    .y = -2.0,
-                },
-            };
+            // const GROUND_BODY_COUNT = 5;
+            // const vs: [GROUND_BODY_COUNT]c.b2Vec2 = .{
+            //     .{
+            //         .x = -10.0,
+            //         .y = 3.0,
+            //     },
+            //     .{
+            //         .x = -10.0,
+            //         .y = 25.0,
+            //     },
+            //     .{
+            //         .x = 10.0,
+            //         .y = 25.0,
+            //     },
+            //     .{
+            //         .x = 10.0,
+            //         .y = 3.0,
+            //     },
+            //     .{
+            //         .x = 0,
+            //         .y = -2.0,
+            //     },
+            // };
 
             var body_chain_def = c.b2DefaultChainDef();
             var materials: [1]c.b2SurfaceMaterial = .{c.b2DefaultSurfaceMaterial()};
             materials[0].restitution = 0.3;
             materials[0].friction = 0.1;
-            body_chain_def.points = @ptrCast(&vs);
-            body_chain_def.count = GROUND_BODY_COUNT;
+            body_chain_def.points = vs_list.items.ptr;
+            body_chain_def.count = @intCast(vs_list.items.len);
+            // body_chain_def.points = @ptrCast(&vs);
+            // body_chain_def.count = GROUND_BODY_COUNT;
             body_chain_def.isLoop = true;
             body_chain_def.materials = @ptrCast(&materials);
             body_chain_def.materialCount = materials.len;
