@@ -20,6 +20,12 @@ pub fn build(b: *std.Build) void {
     const raygui = raylib_dep.module("raygui");
     const raylib_artifact = raylib_dep.artifact("raylib");
 
+    //sqlite
+    const sqlite = b.dependency("sqlite", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "kirbys_pinball_land_dx_zig",
         // .use_llvm = true,
@@ -30,6 +36,7 @@ pub fn build(b: *std.Build) void {
             .imports = &.{
                 .{ .name = "raylib", .module = raylib },
                 .{ .name = "raygui", .module = raygui },
+                .{ .name = "sqlite", .module = sqlite.module("sqlite") },
             },
         }),
     });
@@ -66,6 +73,7 @@ pub fn build(b: *std.Build) void {
                 .{ .name = "raygui", .module = raygui },
                 .{ .name = "dvui", .module = dvui_dep.module("dvui_raylib_zig")},
                 .{ .name = "raylib-zig-backend", .module = backend_mod},
+                .{ .name = "sqlite", .module = sqlite.module("sqlite") },
             },
         }),
     });
