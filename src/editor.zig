@@ -83,8 +83,21 @@ pub fn main() !void {
     });
 
 
+
+
     // defer level.deinit();
     while (!rl.windowShouldClose()) {
+        const mouse_pos: rl.Vector2 = rl.getMousePosition();
+        const ray = rl.getScreenToWorldRay(mouse_pos, camera3d);
+
+        const collision = rl.getRayCollisionQuad(
+            ray,
+            .{ .x = -100, .y = -100, .z = 0 },
+            .{.x = -100, .y = 100, .z = 0},
+            .{ .x = 100, .y = 100, .z = 0 },
+            .{ .x = 100, .y = -100, .z = 0 },
+        );
+
         rl.beginDrawing();
         rl.clearBackground(RaylibBackend.dvuiColorToRaylib(dvui.Color.black));
         {
@@ -105,23 +118,21 @@ pub fn main() !void {
         } else {
             raygui.unlock();
         }
-        // if dvui widgets might not cover the whole window, then need to clear
-        // the previous frame's render
-
 
         if (!raygui.isLocked()) {
-            if (rl.isMouseButtonDown(.left)) {
-                const mouse_pos: rl.Vector2 = rl.getMousePosition();
-                const ray = rl.getScreenToWorldRay(mouse_pos, camera3d);
 
-                const collision = rl.getRayCollisionQuad(
-                    ray,
-                    .{ .x = -100, .y = -100, .z = 0 },
-                    .{.x = -100, .y = 100, .z = 0},
-                    .{ .x = 100, .y = -100, .z = 0 },
-                    .{ .x = 100, .y = 100, .z = 0 },
-                );
+            if (rl.isMouseButtonPressed(.left)) {
+                _ = level.selectPoint(.{
+                    .x = collision.point.x,
+                    .y = collision.point.y,
+                });
+            }
+            if (rl.isMouseButtonDown(.left)) {
                 std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
+                if (level.selected_point) |point| {
+                    point.x = collision.point.x;
+                    point.y = collision.point.y;
+                }
             }
         }
 

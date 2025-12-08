@@ -6,7 +6,7 @@ const primitives = @import("../graphics/primitives.zig");
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
 const LevelPointList = std.ArrayListUnmanaged(Point);
-const SELECTION_ALLOWANCE: f32 = 1.0;
+const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_UNSELECTED_RADIUS: f32 = 0.1;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
@@ -21,8 +21,8 @@ pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void 
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
     for (self.point_list.items) |*point| {
-        if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point.x) and
-            (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point.y)) {
+        if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
+            (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
             self.selected_point = point;
             return true;
         }
