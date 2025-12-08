@@ -71,50 +71,7 @@ pub fn main() !void {
     };
 
     var level: Level = .{};
-    try level.addPoint(allocator, .{
-        .x = 1,
-        .y = -2,
-    });
-    try level.addPoint(allocator, .{
-        .x = 10.0,
-        .y = 3.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 10.0,
-        .y = 25.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
-    try level.addPoint(allocator, .{
-        .x = 0.0,
-        .y = 0.0,
-    });
+    try level.loadPoints(allocator);
 
     // defer level.deinit();
     while (!rl.windowShouldClose()) {
@@ -166,7 +123,7 @@ pub fn main() !void {
             }
         }
 
-        dvuiStuff(level.selected_point, collision.point);
+        try dvuiStuff(level.selected_point, collision.point, &level);
 
         // marks end of dvui frame, don't call dvui functions after this
         // - sends all dvui stuff to backend for rendering, must be called before EndDrawing()
@@ -223,7 +180,7 @@ fn colorPicker(result: *dvui.Color) void {
     }
 }
 
-fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3) void {
+fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     // var float = dvui.floatingWindow(@src(), .{}, .{ .max_size_content = .{ .w = 400, .h = 400 } });
     // defer float.deinit();
 
@@ -288,6 +245,10 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3) void {
 
     if (dvui.button(@src(), "Debug Window", .{}, .{})) {
         dvui.toggleDebugWindow();
+    }
+
+    if (dvui.button(@src(), "Save Points", .{}, .{})) {
+        try level.savePoints();
     }
 
     // look at demo() for examples of dvui widgets, shows in a floating window

@@ -2,6 +2,7 @@ const Level = @This();
 const Vector2 = @import("../data/Vector2.zig");
 const std = @import("std");
 const primitives = @import("../graphics/primitives.zig");
+const sqlite = @import("sqlite");
 
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
@@ -52,5 +53,67 @@ pub fn drawPoints(self: Level) void {
     while (index > 0) {
         primitives.drawLine(self.point_list.items[index].mirror().toVector3(), self.point_list.items[index - 1].mirror().toVector3());
         index -= 1;
+    }
+}
+fn getDb(file_path: [:0]const u8) !sqlite.Db {
+    const db = try sqlite.Db.init(.{
+        .mode =  sqlite.Db.Mode{
+            .File = file_path,
+        },
+        .open_flags = .{ .create = true, .write = true },
+        .threading_mode = .MultiThread,
+    });
+    return db;
+
+}
+
+const Vec2 = extern struct {
+    x: f32,
+    y: f32,
+};
+
+pub fn loadPoints(self: *Level, allocator: std.mem.Allocator) !void {
+    var db = try getDb("assets/asset.db");
+    const query = "SELECT x, y FROM level_points WHERE level_id = 1 ORDER BY sort";
+    var stmt = try db.prepare(query);
+    defer stmt.deinit();
+
+    const points = try stmt.all(Point, allocator, .{}, .{});
+    try self.point_list.ensureTotalCapacity(allocator, points.len);
+    for (points) |point| {
+        self.point_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
+    }
+
+}
+
+pub fn deletePoints(db: *sqlite.Db) !void {
+    const query = "DELETE FROM level_points where level_id = 1";
+    var stmt = try db.prepare(query);
+    defer stmt.deinit();
+    try stmt.exec(.{}, .{});
+}
+
+pub fn savePoints(self: Level) !void {
+    // TODO create resource that handles saving/loading levels
+    var db = try getDb("assets/asset.db");
+    try deletePoints(&db);
+    const len = self.point_list.items.len;
+    if (len < 2) {
+        return;
+    }
+    const query = "INSERT INTO level_points (level_id, x, y, sort) values (?, ?, ?, ?)";
+    var stmt = try db.prepare(query);
+    defer stmt.deinit();
+
+    var index: usize = 0;
+    for (0..len) |i| {
+        stmt.reset();
+        try stmt.exec(.{}, .{
+            .level_id = 1,
+            .x = self.point_list.items[i].x,
+            .y = self.point_list.items[i].y,
+            .sort = index,
+        });
+        index += 1;
     }
 }
