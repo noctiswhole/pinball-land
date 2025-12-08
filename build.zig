@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "kirbys_pinball_land_dx_zig",
-        // .use_llvm = true,
+        .use_llvm = true,
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
             .target = target,
@@ -63,7 +63,7 @@ pub fn build(b: *std.Build) void {
 
     const editor_exe = b.addExecutable(.{
         .name = "kirbys_pinball_land_dx_editor",
-        // .use_llvm = true,
+        .use_llvm = true,
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/editor.zig"),
             .target = target,
