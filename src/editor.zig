@@ -70,6 +70,10 @@ pub fn main() !void {
 
     var level: Level = .{};
     try level.addPoint(allocator, .{
+        .x = 1,
+        .y = -2,
+    });
+    try level.addPoint(allocator, .{
         .x = 10.0,
         .y = 3.0,
     });
@@ -77,6 +81,8 @@ pub fn main() !void {
         .x = 10.0,
         .y = 25.0,
     });
+
+
     // defer level.deinit();
     while (!rl.windowShouldClose()) {
         rl.beginDrawing();
@@ -85,53 +91,6 @@ pub fn main() !void {
             rl.beginMode3D(camera3d);
             defer rl.endMode3D();
             level.drawPoints();
-
-            // // Draw board
-            // rl.drawLine3D(.{
-            //     .x = -10.0,
-            //     .y = 3.0,
-            //     .z = 0,
-            // }, .{
-            //     .x = -10.0,
-            //     .y = 25.0,
-            //     .z = 0,
-            // }, .white);
-            // rl.drawLine3D(.{
-            //     .x = -10.0,
-            //     .y = 25.0,
-            //     .z = 0,
-            // }, .{
-            //     .x = 10.0,
-            //     .y = 25.0,
-            //     .z = 0,
-            // }, .white);
-            // rl.drawLine3D(.{
-            //     .x = 10.0,
-            //     .y = 25.0,
-            //     .z = 0,
-            // }, .{
-            //     .x = 10.0,
-            //     .y = 3.0,
-            //     .z = 0,
-            // }, .white);
-            // rl.drawLine3D(.{
-            //     .x = 10.0,
-            //     .y = 3.0,
-            //     .z = 0,
-            // }, .{
-            //     .x = 0,
-            //     .y = -2.0,
-            //     .z = 0,
-            // }, .white);
-            // rl.drawLine3D(.{
-            //     .x = 0,
-            //     .y = -2.0,
-            //     .z = 0,
-            // }, .{
-            //     .x = -10.0,
-            //     .y = 3.0,
-            //     .z = 0,
-            // }, .white);
         }
         // marks the beginning of a frame for dvui, can call dvui functions after this
         try win.begin(std.time.nanoTimestamp());
