@@ -3,6 +3,7 @@ const dvui = @import("dvui");
 const RaylibBackend = @import("raylib-zig-backend");
 pub const rl = RaylibBackend.raylib;
 pub const raygui = RaylibBackend.raygui;
+const Level = @import("game/Level.zig");
 
 comptime {
     std.debug.assert(@hasDecl(RaylibBackend, "RaylibBackend"));
@@ -14,6 +15,10 @@ const window_icon_png = @embedFile("zig-favicon.png");
 //Figure out the best way to integrate raylib and dvui Event Handling
 
 pub fn main() !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.smp_allocator);
+    const allocator = arena.allocator();
+    defer arena.deinit();
+
     if (@import("builtin").os.tag == .windows) { // optional
         // on windows graphical apps have no console, so output goes to nowhere - attach it manually. related: https://github.com/ziglang/zig/issues/4196
         try dvui.Backend.Common.windowsAttachConsole();
@@ -63,61 +68,70 @@ pub fn main() !void {
         },
     };
 
-    var selected_color: dvui.Color = dvui.Color.white;
-
+    var level: Level = .{};
+    try level.addPoint(allocator, .{
+        .x = 10.0,
+        .y = 3.0,
+    });
+    try level.addPoint(allocator, .{
+        .x = 10.0,
+        .y = 25.0,
+    });
+    // defer level.deinit();
     while (!rl.windowShouldClose()) {
         rl.beginDrawing();
         rl.clearBackground(RaylibBackend.dvuiColorToRaylib(dvui.Color.black));
         {
             rl.beginMode3D(camera3d);
             defer rl.endMode3D();
+            level.drawPoints();
 
-            // Draw board
-                rl.drawLine3D(.{
-            .x = -10.0,
-            .y = 3.0,
-            .z = 0,
-        }, .{
-            .x = -10.0,
-            .y = 25.0,
-            .z = 0,
-        }, .white);
-            rl.drawLine3D(.{
-                .x = -10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .{
-                .x = 10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 10.0,
-                .y = 25.0,
-                .z = 0,
-            }, .{
-                .x = 10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .{
-                .x = 0,
-                .y = -2.0,
-                .z = 0,
-            }, .white);
-            rl.drawLine3D(.{
-                .x = 0,
-                .y = -2.0,
-                .z = 0,
-            }, .{
-                .x = -10.0,
-                .y = 3.0,
-                .z = 0,
-            }, .white);
+            // // Draw board
+            // rl.drawLine3D(.{
+            //     .x = -10.0,
+            //     .y = 3.0,
+            //     .z = 0,
+            // }, .{
+            //     .x = -10.0,
+            //     .y = 25.0,
+            //     .z = 0,
+            // }, .white);
+            // rl.drawLine3D(.{
+            //     .x = -10.0,
+            //     .y = 25.0,
+            //     .z = 0,
+            // }, .{
+            //     .x = 10.0,
+            //     .y = 25.0,
+            //     .z = 0,
+            // }, .white);
+            // rl.drawLine3D(.{
+            //     .x = 10.0,
+            //     .y = 25.0,
+            //     .z = 0,
+            // }, .{
+            //     .x = 10.0,
+            //     .y = 3.0,
+            //     .z = 0,
+            // }, .white);
+            // rl.drawLine3D(.{
+            //     .x = 10.0,
+            //     .y = 3.0,
+            //     .z = 0,
+            // }, .{
+            //     .x = 0,
+            //     .y = -2.0,
+            //     .z = 0,
+            // }, .white);
+            // rl.drawLine3D(.{
+            //     .x = 0,
+            //     .y = -2.0,
+            //     .z = 0,
+            // }, .{
+            //     .x = -10.0,
+            //     .y = 3.0,
+            //     .z = 0,
+            // }, .white);
         }
         // marks the beginning of a frame for dvui, can call dvui functions after this
         try win.begin(std.time.nanoTimestamp());
@@ -135,22 +149,22 @@ pub fn main() !void {
         // if dvui widgets might not cover the whole window, then need to clear
         // the previous frame's render
 
-        {
-            var b = dvui.box(@src(), .{}, .{ .expand = .horizontal, .margin = .{ .x = 10 } });
-            defer b.deinit();
 
-            if (raygui.isLocked()) {
-                dvui.label(@src(), "Raygui Status: Locked", .{}, .{});
-            } else {
-                dvui.label(@src(), "Raygui Status: Unlocked", .{}, .{});
-            }
+        if (!raygui.isLocked()) {
+            if (rl.isMouseButtonDown(.left)) {
+                const mouse_pos: rl.Vector2 = rl.getMousePosition();
+                const ray = rl.getScreenToWorldRay(mouse_pos, camera3d);
 
-            if (dvui.expander(@src(), "Pick Color Using Raygui", .{}, .{})) {
-                colorPicker(&selected_color);
+                const collision = rl.getRayCollisionQuad(
+                    ray,
+                    .{ .x = -100, .y = -100, .z = 0 },
+                    .{.x = -100, .y = 100, .z = 0},
+                    .{ .x = 100, .y = -100, .z = 0 },
+                    .{ .x = 100, .y = 100, .z = 0 },
+                );
+                std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
             }
         }
-
-        rl.drawText("Congrats! You Combined Raylib (raylib-zig), Raygui and DVUI!", 20, 400, 20, rl.Color.white);
 
         dvuiStuff();
 
@@ -210,10 +224,18 @@ fn colorPicker(result: *dvui.Color) void {
 }
 
 fn dvuiStuff() void {
-    var float = dvui.floatingWindow(@src(), .{}, .{ .max_size_content = .{ .w = 400, .h = 400 } });
-    defer float.deinit();
+    // var float = dvui.floatingWindow(@src(), .{}, .{ .max_size_content = .{ .w = 400, .h = 400 } });
+    // defer float.deinit();
 
-    float.dragAreaSet(dvui.windowHeader("Floating Window", "", null));
+    // float.dragAreaSet(dvui.windowHeader("Floating Window", "", null));
+    //
+    var vbox = dvui.box(@src(), .{.dir = .vertical}, .{
+        .style = .window,
+        .background = true,
+        .expand = .vertical,
+        .max_size_content = .width(@as(f32, @floatFromInt(rl.getScreenWidth())) * 0.2),
+    });
+    defer vbox.deinit();
 
     var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both });
     defer scroll.deinit();

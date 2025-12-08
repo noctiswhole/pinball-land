@@ -26,3 +26,10 @@ pub fn toVector3(self: Vector2) Vector3 {
         .z = 0,
     };
 }
+
+pub fn mirror(self: Vector2) Vector2 {
+    return .{
+        .x = self.x * -1,
+        .y = self.y
+    };
+}
