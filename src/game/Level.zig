@@ -7,22 +7,17 @@ const primitives = @import("../graphics/primitives.zig");
 pub const Point = Vector2;
 const LevelPointList = std.ArrayListUnmanaged(Point);
 const SELECTION_ALLOWANCE: f32 = 1.0;
+const DRAW_UNSELECTED_RADIUS: f32 = 0.1;
+const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
 point_list: LevelPointList = .empty,
 selected_point: ?*Point = null,
-
-// pub fn init() Level {
-//     return .{
-//
-//     };
-// }
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
     try self.point_list.append(allocator, point);
 }
 
-//
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
     for (self.point_list.items) |*point| {
@@ -41,13 +36,17 @@ pub fn drawPoints(self: Level) void {
         return;
     }
 
+    primitives.drawSphere(self.point_list.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
     var index: usize = 1;
     while (index < len) {
         primitives.drawLine(self.point_list.items[index-1].toVector3(), self.point_list.items[index].toVector3());
+        primitives.drawSphere(self.point_list.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
         index += 1;
     }
     index -= 1;
-
+    if (self.selected_point) |spoint| {
+        primitives.drawSphere(spoint.toVector3(), DRAW_SELECTED_RADIUS);
+    }
     primitives.drawLine(self.point_list.items[index].toVector3(), self.point_list.items[index].mirror().toVector3());
 
     while (index > 0) {
