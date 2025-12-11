@@ -87,7 +87,7 @@ pub const Box2dWorld = struct {
     pub fn init(allocator: std.mem.Allocator, level: *Level, gravity: rl.Vector2) !Box2dWorld {
         // TODO: separate to per-frame allocator
         var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, level.point_list.items.len * 2);
-        // defer vs_list.deinit(allocator);
+        defer vs_list.deinit(allocator);
 
         // TODO: organize this better so that the world collision doesn't need to happen in the init function
         const len = level.point_list.items.len;
@@ -103,9 +103,7 @@ pub const Box2dWorld = struct {
             const mirrored_point = level.point_list.items[index].mirror();
             vs_list.appendAssumeCapacity(.{.x = mirrored_point.x, .y = mirrored_point.y});
             std.debug.print("x {d} y {d}\n", .{mirrored_point.x, mirrored_point.y});
-
         }
-
         const gravity_dto: c.b2Vec2 = .{
             .x = gravity.x,
             .y = gravity.y,
@@ -119,30 +117,6 @@ pub const Box2dWorld = struct {
 
         const ground_body = Box2dBody.init_old(world_id, ground_body_def);
         {
-            // const GROUND_BODY_COUNT = 5;
-            // const vs: [GROUND_BODY_COUNT]c.b2Vec2 = .{
-            //     .{
-            //         .x = -10.0,
-            //         .y = 3.0,
-            //     },
-            //     .{
-            //         .x = -10.0,
-            //         .y = 25.0,
-            //     },
-            //     .{
-            //         .x = 10.0,
-            //         .y = 25.0,
-            //     },
-            //     .{
-            //         .x = 10.0,
-            //         .y = 3.0,
-            //     },
-            //     .{
-            //         .x = 0,
-            //         .y = -2.0,
-            //     },
-            // };
-
             var body_chain_def = c.b2DefaultChainDef();
             var materials: [1]c.b2SurfaceMaterial = .{c.b2DefaultSurfaceMaterial()};
             materials[0].restitution = 0.3;
