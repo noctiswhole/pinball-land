@@ -115,8 +115,8 @@ pub fn main() !void {
             } else if (rl.isMouseButtonDown(.left)) {
                 std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
                 if (level.selected_point) |point| {
-                    point.x = collision.point.x;
-                    point.y = collision.point.y;
+                    point.x = @round(collision.point.x * 4) / 4;
+                    point.y = @round(collision.point.y * 4) / 4;
                 }
             }
         }
