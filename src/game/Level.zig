@@ -1,3 +1,4 @@
+// TODO: move most of the point-management logic to LevelGeometry
 const Level = @This();
 const Vector2 = @import("../data/Vector2.zig");
 const std = @import("std");
@@ -23,6 +24,19 @@ pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void 
     try self.level_geometry.addPoint(allocator, point);
 }
 
+pub fn removePoint(self: *Level, point_search: Point) bool {
+    self.selected_point = null;
+    for (0..self.level_geometry.points.items.len) |i| {
+        const point = self.level_geometry.points.items[i];
+        if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
+            (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
+            _ = self.level_geometry.points.orderedRemove(i);
+            return true;
+        }
+    }
+    return false;
+}
+
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
     for (self.level_geometry.points.items) |*point| {
@@ -36,7 +50,7 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 }
 
 pub fn drawPoints(self: Level) void {
-    // TODO: unify iteration with a iterator
+    // TODO: unify iteration with the box2d-side iteration with a iterator
     const len = self.level_geometry.points.items.len;
     if (len < 2) {
         return;

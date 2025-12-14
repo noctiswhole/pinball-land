@@ -162,28 +162,43 @@ pub fn main() !void {
         }
 
         if (!raygui.isLocked()) {
-            if (rl.isMouseButtonPressed(.left)) {
-                _ = level.selectPoint(.{
-                    .x = collision.point.x,
-                    .y = collision.point.y,
-                });
-            } else if (rl.isMouseButtonDown(.left)) {
-                std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
-                if (level.selected_point) |point| {
-                    point.x = @round(collision.point.x * 4) / 4;
-                    point.y = @round(collision.point.y * 4) / 4;
+            // TODO: build event manager
+            if (rl.isKeyDown(.left_shift)) {
+                if (rl.isMouseButtonPressed(.left)) {
+                    try level.addPoint(allocator, .{ .x = @round(collision.point.x * 4) / 4, .y = @round(collision.point.y * 4) / 4 });
                 }
-            }
+                if (rl.isMouseButtonDown(.right)) {
+                    _ = level.removePoint(
+                        .{
+                            .x = collision.point.x,
+                            .y = collision.point.y,
+                        }
+                    );
+                }
+            } else {
+                if (rl.isMouseButtonPressed(.left)) {
+                    _ = level.selectPoint(.{
+                        .x = collision.point.x,
+                        .y = collision.point.y,
+                    });
+                } else if (rl.isMouseButtonDown(.left)) {
+                    std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
+                    if (level.selected_point) |point| {
+                        point.x = @round(collision.point.x * 4) / 4;
+                        point.y = @round(collision.point.y * 4) / 4;
+                    }
+                }
 
-            if (rl.isMouseButtonDown(.middle)) {
-                const mouse_delta = rl.getMouseDelta();
-                cam_pos.x -= mouse_delta.x/30;
-                cam_pos.y += mouse_delta.y/30;
+                if (rl.isMouseButtonDown(.middle)) {
+                    const mouse_delta = rl.getMouseDelta();
+                    cam_pos.x -= mouse_delta.x/30;
+                    cam_pos.y += mouse_delta.y/30;
 
-                camera3d.position.x = cam_pos.x;
-                camera3d.position.y = cam_pos.y;
-                camera3d.target.x = cam_pos.x;
-                camera3d.target.y = cam_pos.y;
+                    camera3d.position.x = cam_pos.x;
+                    camera3d.position.y = cam_pos.y;
+                    camera3d.target.x = cam_pos.x;
+                    camera3d.target.y = cam_pos.y;
+                }
             }
         }
 
