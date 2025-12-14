@@ -16,6 +16,10 @@ fn drawGrid(cam_pos: Vector2) void {
     const y: i32 = @intFromFloat(cam_pos.y);
     const x_offset: f32 = @floatFromInt(x);
     const y_offset: f32 = @floatFromInt(y);
+    const LINE_COLOR: rl.Color = rl.getColor(0x202020ff);
+    const LINE_INTERVAL_COLOR: rl.Color = rl.getColor(0x151515ff);
+    const LINE_X_COLOR: rl.Color = .maroon;
+    const LINE_Y_COLOR: rl.Color = .dark_green;
 
     var i: f32 = -30;
     while (i < 30) {
@@ -29,8 +33,10 @@ fn drawGrid(cam_pos: Vector2) void {
                 .x = i + (0.25 * @as(f32, @floatFromInt(j))) + x_offset,
                 .y = 100 + y_offset,
                 .z = -10,
-            }, rl.getColor(0x151515ff));
+            }, LINE_INTERVAL_COLOR);
         }
+
+        const line_color_y: rl.Color = if (i + x_offset == 0) LINE_Y_COLOR else LINE_COLOR;
 
         rl.drawLine3D(.{
             .x = i + x_offset,
@@ -40,7 +46,7 @@ fn drawGrid(cam_pos: Vector2) void {
             .x = i + x_offset,
             .y = 100 + y_offset,
             .z = -10,
-        }, rl.getColor(0x202020ff));
+        }, line_color_y);
 
         // x lines
         for (1..4) |j| {
@@ -52,8 +58,11 @@ fn drawGrid(cam_pos: Vector2) void {
                 .x = 100 + x_offset,
                 .y = i + (0.25 * @as(f32, @floatFromInt(j))) + y_offset,
                 .z = -10,
-            }, rl.getColor(0x151515ff));
+            }, LINE_INTERVAL_COLOR);
         }
+
+        const line_color_x: rl.Color = if (i + y_offset == 0) LINE_X_COLOR else LINE_COLOR;
+
         rl.drawLine3D(.{
             .x = -100 + x_offset,
             .y = i + y_offset,
@@ -62,7 +71,7 @@ fn drawGrid(cam_pos: Vector2) void {
             .x = 100 + x_offset,
             .y = i + y_offset,
             .z = -10,
-        }, rl.getColor(0x202020ff));
+        }, line_color_x);
         i += 1;
     }
 }
