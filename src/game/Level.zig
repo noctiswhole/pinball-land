@@ -94,7 +94,11 @@ pub fn loadPoints(self: *Level, allocator: std.mem.Allocator) !void {
 }
 
 pub fn deletePoints(db: *sqlite.Db) !void {
-    const query = "DELETE FROM level_points where level_id = 1";
+    // TODO: remove hard coded id
+    const query =
+        \\ DELETE FROM level_geometry_points
+        \\ where level_geometry_id = 1
+        ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
     try stmt.exec(.{}, .{});
@@ -108,7 +112,11 @@ pub fn savePoints(self: Level) !void {
     if (len < 2) {
         return;
     }
-    const query = "INSERT INTO level_points (level_id, x, y, sort) values (?, ?, ?, ?)";
+    const query =
+        \\ INSERT INTO level_geometry_points
+        \\ (level_geometry_id, x, y, sort) values
+        \\ (?, ?, ?, ?)
+        ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
 
