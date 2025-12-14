@@ -3,25 +3,29 @@ const Vector2 = @import("../data/Vector2.zig");
 const std = @import("std");
 const primitives = @import("../graphics/primitives.zig");
 const sqlite = @import("sqlite");
+const LevelGeometry = @import("LevelGeometry.zig");
 
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
-const LevelPointList = std.ArrayListUnmanaged(Point);
 const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_UNSELECTED_RADIUS: f32 = 0.1;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
-point_list: LevelPointList = .empty,
+level_geometry: LevelGeometry = .{
+    .id = 1,
+    .is_connected = false,
+    .is_loop = false,
+},
 selected_point: ?*Point = null,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
-    try self.point_list.append(allocator, point);
+    try self.level_geometry.addPoint(allocator, point);
 }
 
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
-    for (self.point_list.items) |*point| {
+    for (self.level_geometry.points.items) |*point| {
         if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
             (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
             self.selected_point = point;
@@ -33,26 +37,26 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 
 pub fn drawPoints(self: Level) void {
     // TODO: unify iteration with a iterator
-    const len = self.point_list.items.len;
+    const len = self.level_geometry.points.items.len;
     if (len < 2) {
         return;
     }
 
-    primitives.drawSphere(self.point_list.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
+    primitives.drawSphere(self.level_geometry.points.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
     var index: usize = 1;
     while (index < len) {
-        primitives.drawLine(self.point_list.items[index-1].toVector3(), self.point_list.items[index].toVector3());
-        primitives.drawSphere(self.point_list.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
+        primitives.drawLine(self.level_geometry.points.items[index-1].toVector3(), self.level_geometry.points.items[index].toVector3());
+        primitives.drawSphere(self.level_geometry.points.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
         index += 1;
     }
     index -= 1;
     if (self.selected_point) |spoint| {
         primitives.drawSphere(spoint.toVector3(), DRAW_SELECTED_RADIUS);
     }
-    primitives.drawLine(self.point_list.items[index].toVector3(), self.point_list.items[index].mirror().toVector3());
+    primitives.drawLine(self.level_geometry.points.items[index].toVector3(), self.level_geometry.points.items[index].mirror().toVector3());
 
     while (index > 0) {
-        primitives.drawLine(self.point_list.items[index].mirror().toVector3(), self.point_list.items[index - 1].mirror().toVector3());
+        primitives.drawLine(self.level_geometry.points.items[index].mirror().toVector3(), self.level_geometry.points.items[index - 1].mirror().toVector3());
         index -= 1;
     }
 }
@@ -86,9 +90,9 @@ pub fn loadPoints(self: *Level, allocator: std.mem.Allocator) !void {
     defer stmt.deinit();
 
     const points = try stmt.all(Point, allocator, .{}, .{});
-    try self.point_list.ensureTotalCapacity(allocator, points.len);
+    try self.level_geometry.points.ensureTotalCapacity(allocator, points.len);
     for (points) |point| {
-        self.point_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
+        self.level_geometry.points.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
     }
 
 }
@@ -108,7 +112,7 @@ pub fn savePoints(self: Level) !void {
     // TODO create resource that handles saving/loading levels
     var db = try getDb("assets/asset.db");
     try deletePoints(&db);
-    const len = self.point_list.items.len;
+    const len = self.level_geometry.points.items.len;
     if (len < 2) {
         return;
     }
@@ -125,8 +129,8 @@ pub fn savePoints(self: Level) !void {
         stmt.reset();
         try stmt.exec(.{}, .{
             .level_id = 1,
-            .x = self.point_list.items[i].x,
-            .y = self.point_list.items[i].y,
+            .x = self.level_geometry.points.items[i].x,
+            .y = self.level_geometry.points.items[i].y,
             .sort = index,
         });
         index += 1;
