@@ -11,8 +11,6 @@ comptime {
     std.debug.assert(@hasDecl(RaylibBackend, "RaylibBackend"));
 }
 
-const window_icon_png = @embedFile("zig-favicon.png");
-
 //TODO:
 //Figure out the best way to integrate raylib and dvui Event Handling
 
@@ -187,6 +185,30 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     // float.dragAreaSet(dvui.windowHeader("Floating Window", "", null));
     //
     //
+    var show_interface: bool = true;
+    show_interface = show_interface;
+    var float = dvui.floatingWindow(
+        @src(),
+        .{
+            .open_flag = &show_interface,
+            .center_on = .{
+                .w = 200,
+                .h = 980,
+            }
+        },
+        .{
+            .expand = .both,
+            .max_size_content = .width(200),
+            .tag = "point",
+            .rect = .{
+                .x = 0,
+                .y = 0,
+                .w = 200,
+                .h = 980,
+            }
+        });
+    defer float.deinit();
+    _ = dvui.windowHeader("Properties", "", null);
     var vbox = dvui.box(@src(), .{.dir = .vertical}, .{
         .style = .window,
         .background = true,
@@ -197,7 +219,6 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
 
     var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both });
     defer scroll.deinit();
-    var show_interface: bool = point != null;
 
     if (point) |p| {
         // if (false) {
@@ -212,8 +233,8 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
         // }
         _ = mouse_pos;
 
-        var float = dvui.floatingWindow(@src(), .{ .center_on = .{ .x = 100, .y = 100, .w = 100, .h = 100 }, .open_flag = &show_interface }, .{ .expand = .both, .max_size_content = .width(200), .tag = "point" });
-        defer float.deinit();
+        // var float = dvui.floatingWindow(@src(), .{ .center_on = .{ .x = 100, .y = 100, .w = 100, .h = 100 }, .open_flag = &show_interface }, .{ .expand = .both, .max_size_content = .width(200), .tag = "point" });
+        // defer float.deinit();
 
 
         dvui.structUI(@src(), "Point", p, 1, .{});
