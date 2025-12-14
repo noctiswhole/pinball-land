@@ -141,10 +141,10 @@ pub fn main() !void {
 
         const collision = rl.getRayCollisionQuad(
             ray,
-            .{ .x = -100, .y = -100, .z = 0 },
-            .{.x = -100, .y = 100, .z = 0},
-            .{ .x = 100, .y = 100, .z = 0 },
-            .{ .x = 100, .y = -100, .z = 0 },
+            .{ .x = -100 + cam_pos.x, .y = -100 + cam_pos.y, .z = 0 },
+            .{.x = -100 + cam_pos.x, .y = 100 + cam_pos.y, .z = 0},
+            .{ .x = 100 + cam_pos.x, .y = 100 + cam_pos.y, .z = 0 },
+            .{ .x = 100 + cam_pos.x, .y = -100 + cam_pos.y, .z = 0 },
         );
 
         // marks the beginning of a frame for dvui, can call dvui functions after this
