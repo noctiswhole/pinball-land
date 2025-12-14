@@ -11,52 +11,56 @@ comptime {
     std.debug.assert(@hasDecl(RaylibBackend, "RaylibBackend"));
 }
 
-fn drawGrid() void {
-    // TODO: make this generate lines dynamically based off of camera zoom
+fn drawGrid(cam_pos: Vector2) void {
+    const x: i32 = @intFromFloat(cam_pos.x);
+    const y: i32 = @intFromFloat(cam_pos.y);
+    const x_offset: f32 = @floatFromInt(x);
+    const y_offset: f32 = @floatFromInt(y);
+
     var i: f32 = -30;
     while (i < 30) {
         // y lines
         for (1..4) |j| {
             rl.drawLine3D(.{
-                .x = i + (0.25 * @as(f32, @floatFromInt(j))),
-                .y = -100,
+                .x = i + (0.25 * @as(f32, @floatFromInt(j))) + x_offset,
+                .y = -100 + y_offset,
                 .z = -10,
             }, .{
-                .x = i + (0.25 * @as(f32, @floatFromInt(j))),
-                .y = 100,
+                .x = i + (0.25 * @as(f32, @floatFromInt(j))) + x_offset,
+                .y = 100 + y_offset,
                 .z = -10,
             }, rl.getColor(0x151515ff));
         }
 
         rl.drawLine3D(.{
-            .x = i,
-            .y = -100,
+            .x = i + x_offset,
+            .y = -100 + y_offset,
             .z = -10,
         }, .{
-            .x = i,
-            .y = 100,
+            .x = i + x_offset,
+            .y = 100 + y_offset,
             .z = -10,
         }, rl.getColor(0x202020ff));
 
         // x lines
         for (1..4) |j| {
             rl.drawLine3D(.{
-                .x = -100,
-                .y = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .x = -100 + x_offset,
+                .y = i + (0.25 * @as(f32, @floatFromInt(j))) + y_offset,
                 .z = -10,
             }, .{
-                .x = 100,
-                .y = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .x = 100 + x_offset,
+                .y = i + (0.25 * @as(f32, @floatFromInt(j))) + y_offset,
                 .z = -10,
             }, rl.getColor(0x151515ff));
         }
         rl.drawLine3D(.{
-            .x = -100,
-            .y = i,
+            .x = -100 + x_offset,
+            .y = i + y_offset,
             .z = -10,
         }, .{
-            .x = 100,
-            .y = i,
+            .x = 100 + x_offset,
+            .y = i + y_offset,
             .z = -10,
         }, rl.getColor(0x202020ff));
         i += 1;
@@ -96,7 +100,9 @@ pub fn main() !void {
     var win = try dvui.Window.init(@src(), gpa, backend.backend(), .{});
     defer win.deinit();
 
-    const camera3d: rl.Camera = .{
+    var cam_pos: Vector2 = .{ .x = 0, .y = 12 };
+
+    var camera3d: rl.Camera = .{
         .fovy = 30,
         .up = .{
             .x = 0,
@@ -105,13 +111,13 @@ pub fn main() !void {
         },
         .projection = .orthographic,
         .position = .{
-            .x = 0,
-            .y = 12,
+            .x = cam_pos.x,
+            .y = cam_pos.y,
             .z = 20,
         },
         .target = .{
-            .x = 0,
-            .y = 12,
+            .x = cam_pos.x,
+            .y = cam_pos.y,
             .z = 0,
         },
     };
@@ -132,12 +138,38 @@ pub fn main() !void {
             .{ .x = 100, .y = -100, .z = 0 },
         );
 
+        if (!raygui.isLocked()) {
+            if (rl.isMouseButtonPressed(.left)) {
+                _ = level.selectPoint(.{
+                    .x = collision.point.x,
+                    .y = collision.point.y,
+                });
+            } else if (rl.isMouseButtonDown(.left)) {
+                std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
+                if (level.selected_point) |point| {
+                    point.x = @round(collision.point.x * 4) / 4;
+                    point.y = @round(collision.point.y * 4) / 4;
+                }
+            }
+
+            if (rl.isMouseButtonDown(.middle)) {
+                const mouse_delta = rl.getMouseDelta();
+                cam_pos.x -= mouse_delta.x/30;
+                cam_pos.y += mouse_delta.y/30;
+
+                camera3d.position.x = cam_pos.x;
+                camera3d.position.y = cam_pos.y;
+                camera3d.target.x = cam_pos.x;
+                camera3d.target.y = cam_pos.y;
+            }
+        }
+
         rl.beginDrawing();
         rl.clearBackground(RaylibBackend.dvuiColorToRaylib(dvui.Color.black));
         {
             rl.beginMode3D(camera3d);
             defer rl.endMode3D();
-            drawGrid();
+            drawGrid(cam_pos);
             level.drawPoints();
         }
         // marks the beginning of a frame for dvui, can call dvui functions after this
@@ -152,22 +184,6 @@ pub fn main() !void {
             raygui.lock();
         } else {
             raygui.unlock();
-        }
-
-        if (!raygui.isLocked()) {
-
-            if (rl.isMouseButtonPressed(.left)) {
-                _ = level.selectPoint(.{
-                    .x = collision.point.x,
-                    .y = collision.point.y,
-                });
-            } else if (rl.isMouseButtonDown(.left)) {
-                std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
-                if (level.selected_point) |point| {
-                    point.x = @round(collision.point.x * 4) / 4;
-                    point.y = @round(collision.point.y * 4) / 4;
-                }
-            }
         }
 
         try dvuiStuff(level.selected_point, collision.point, &level);
