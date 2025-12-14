@@ -13,8 +13,8 @@ comptime {
 
 fn drawGrid() void {
     // TODO: make this generate lines dynamically based off of camera zoom
-    var i: f32 = -25;
-    while (i < 25) {
+    var i: f32 = -30;
+    while (i < 30) {
         // y lines
         for (1..4) |j| {
             rl.drawLine3D(.{
@@ -285,7 +285,10 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
         // var float = dvui.floatingWindow(@src(), .{ .center_on = .{ .x = 100, .y = 100, .w = 100, .h = 100 }, .open_flag = &show_interface }, .{ .expand = .both, .max_size_content = .width(200), .tag = "point" });
         // defer float.deinit();
 
-
+            // const structui_options: dvui.struct_ui.StructOptions(Vector2) = .initWithDefaults(.{
+            //     .x = .{ .number = .{ .min = 0, .max = 50, .widget_type = .slider } },
+            //     .y = .{ .number = .{ .min = -100, .max = 100, .widget_type = .slider } },
+            // }, null);
         dvui.structUI(@src(), "Point", p, 1, .{});
     }
 
