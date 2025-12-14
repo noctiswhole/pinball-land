@@ -75,7 +75,13 @@ const Vec2 = extern struct {
 
 pub fn loadPoints(self: *Level, allocator: std.mem.Allocator) !void {
     var db = try getDb("assets/asset.db");
-    const query = "SELECT x, y FROM level_points WHERE level_id = 1 ORDER BY sort";
+    const query =
+        \\ SELECT x, y FROM
+        \\ level_geometry
+        \\ join level_geometry_points
+        \\ on level_geometry_points.level_geometry_id = level_geometry.id
+        \\ WHERE level_id = 1 ORDER BY sort
+        ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
 
