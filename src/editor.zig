@@ -11,9 +11,57 @@ comptime {
     std.debug.assert(@hasDecl(RaylibBackend, "RaylibBackend"));
 }
 
-//TODO:
-//Figure out the best way to integrate raylib and dvui Event Handling
+fn drawGrid() void {
+    // TODO: make this generate lines dynamically based off of camera zoom
+    var i: f32 = -25;
+    while (i < 25) {
+        // y lines
+        for (1..4) |j| {
+            rl.drawLine3D(.{
+                .x = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .y = -100,
+                .z = -10,
+            }, .{
+                .x = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .y = 100,
+                .z = -10,
+            }, rl.getColor(0x151515ff));
+        }
 
+        rl.drawLine3D(.{
+            .x = i,
+            .y = -100,
+            .z = -10,
+        }, .{
+            .x = i,
+            .y = 100,
+            .z = -10,
+        }, rl.getColor(0x202020ff));
+
+        // x lines
+        for (1..4) |j| {
+            rl.drawLine3D(.{
+                .x = -100,
+                .y = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .z = -10,
+            }, .{
+                .x = 100,
+                .y = i + (0.25 * @as(f32, @floatFromInt(j))),
+                .z = -10,
+            }, rl.getColor(0x151515ff));
+        }
+        rl.drawLine3D(.{
+            .x = -100,
+            .y = i,
+            .z = -10,
+        }, .{
+            .x = 100,
+            .y = i,
+            .z = -10,
+        }, rl.getColor(0x202020ff));
+        i += 1;
+    }
+}
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.smp_allocator);
     const allocator = arena.allocator();
@@ -89,6 +137,7 @@ pub fn main() !void {
         {
             rl.beginMode3D(camera3d);
             defer rl.endMode3D();
+            drawGrid();
             level.drawPoints();
         }
         // marks the beginning of a frame for dvui, can call dvui functions after this
