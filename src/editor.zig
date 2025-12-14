@@ -138,6 +138,20 @@ pub fn main() !void {
             .{ .x = 100, .y = -100, .z = 0 },
         );
 
+        // marks the beginning of a frame for dvui, can call dvui functions after this
+        try win.begin(std.time.nanoTimestamp());
+
+        // send all Raylib events to dvui for processing
+        try backend.addAllEvents(&win);
+
+        if (backend.shouldBlockRaylibInput()) {
+            // NOTE: I am using raygui here because it has a simple lock-unlock system
+            // Non-raygui raylib apps could also easily implement such a system
+            raygui.lock();
+        } else {
+            raygui.unlock();
+        }
+
         if (!raygui.isLocked()) {
             if (rl.isMouseButtonPressed(.left)) {
                 _ = level.selectPoint(.{
@@ -171,19 +185,6 @@ pub fn main() !void {
             defer rl.endMode3D();
             drawGrid(cam_pos);
             level.drawPoints();
-        }
-        // marks the beginning of a frame for dvui, can call dvui functions after this
-        try win.begin(std.time.nanoTimestamp());
-
-        // send all Raylib events to dvui for processing
-        try backend.addAllEvents(&win);
-
-        if (backend.shouldBlockRaylibInput()) {
-            // NOTE: I am using raygui here because it has a simple lock-unlock system
-            // Non-raygui raylib apps could also easily implement such a system
-            raygui.lock();
-        } else {
-            raygui.unlock();
         }
 
         try dvuiStuff(level.selected_point, collision.point, &level);
