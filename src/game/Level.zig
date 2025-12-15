@@ -6,6 +6,8 @@ const primitives = @import("../graphics/primitives.zig");
 const sqlite = @import("sqlite");
 const LevelGeometry = @import("LevelGeometry.zig");
 
+const LevelGeometries = std.ArrayListUnmanaged(LevelGeometry);
+
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
 const SELECTION_ALLOWANCE: f32 = 0.4;
@@ -17,6 +19,7 @@ level_geometry: LevelGeometry = .{
     .is_connected = false,
     .is_loop = false,
 },
+level_geometries: LevelGeometries = .empty,
 selected_point: ?*Point = null,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
@@ -91,24 +94,86 @@ const Vec2 = extern struct {
     y: f32,
 };
 
-pub fn loadPoints(self: *Level, allocator: std.mem.Allocator) !void {
+pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
+    var db = try getDb("assets/asset.db");
+
+    {
+        const query =
+            \\ SELECT id, is_connected, is_loop FROM
+            \\ level_geometry
+            \\ WHERE level_id = ?
+        ;
+        var stmt = try db.prepare(query);
+        defer stmt.deinit();
+
+        const geometries = try stmt.all(struct {
+            id: usize,
+            is_connected: bool,
+            is_loop: bool,
+        }, allocator, .{}, .{level_id});
+        try self.level_geometries.ensureTotalCapacity(allocator, geometries.len);
+        for (geometries) |geometry| {
+            self.level_geometries.appendAssumeCapacity(.{
+                .id = geometry.id,
+                .is_connected = geometry.is_connected,
+                .is_loop = geometry.is_loop,
+            });
+        }
+    }
+
+    if (self.level_geometries.items.len > 0) {
+        const query =
+            \\ SELECT x, y, level_geometry_id FROM
+            \\ level_geometry
+            \\ join level_geometry_points
+            \\ on level_geometry_points.level_geometry_id = level_geometry.id
+            \\ WHERE level_id = ? ORDER BY level_geometry_id, sort
+        ;
+        var stmt = try db.prepare(query);
+        defer stmt.deinit();
+
+        const points = try stmt.all(struct {
+            x: f32,
+            y: f32,
+            level_geometry_id: usize,
+        }, allocator, .{}, .{level_id});
+
+        var geometry_index: usize = 0;
+        // try self.level_geometry.points.ensureTotalCapacity(allocator, points.len);
+        for (points) |point| {
+            while (self.level_geometries.items[geometry_index].id != point.level_geometry_id) {
+                geometry_index += 1;
+                if (self.level_geometries.items.len >= geometry_index) {
+                    std.debug.print("Invalid geometry index reference {d}", .{point.level_geometry_id});
+                    return error.InvalidGeometryIndexReference;
+                }
+            }
+            try self.level_geometries.items[geometry_index].points.append(allocator, .{ .x = point.x, .y = point.y });
+        }
+    }
+}
+
+pub fn loadPoints(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
     var db = try getDb("assets/asset.db");
     const query =
-        \\ SELECT x, y FROM
+        \\ SELECT x, y, level_geometry_id FROM
         \\ level_geometry
         \\ join level_geometry_points
         \\ on level_geometry_points.level_geometry_id = level_geometry.id
-        \\ WHERE level_id = 1 ORDER BY sort
+        \\ WHERE level_id = ? ORDER BY level_geometry_id, sort
         ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
 
-    const points = try stmt.all(Point, allocator, .{}, .{});
+    const points = try stmt.all(struct {
+        x: f32,
+        y: f32,
+        level_geometry_id: usize,
+    }, allocator, .{}, .{level_id});
     try self.level_geometry.points.ensureTotalCapacity(allocator, points.len);
     for (points) |point| {
         self.level_geometry.points.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
     }
-
 }
 
 pub fn deletePoints(db: *sqlite.Db) !void {
