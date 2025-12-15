@@ -161,7 +161,7 @@ pub const Box2dWorld = struct {
         flipper_joint_def.motorSpeed = 0;
         flipper_joint_def.localAnchorA = left_position;
         flipper_joint_def.bodyIdB = flipper_left.body_id;
-        flipper_joint_def.lowerAngle = -20.0 * c.B2_PI / 180.0;
+        flipper_joint_def.lowerAngle = -35.0 * c.B2_PI / 180.0;
         flipper_joint_def.upperAngle = 20.0 * c.B2_PI / 180.0;
         const left_joint_id = c.b2CreateRevoluteJoint(world_id, &flipper_joint_def);
 
@@ -169,7 +169,7 @@ pub const Box2dWorld = struct {
         flipper_joint_def.localAnchorA = right_position;
         flipper_joint_def.bodyIdB = flipper_right.body_id;
         flipper_joint_def.lowerAngle = -20.0 * c.B2_PI / 180.0;
-        flipper_joint_def.upperAngle = 20.0 * c.B2_PI / 180.0;
+        flipper_joint_def.upperAngle = 35.0 * c.B2_PI / 180.0;
         const right_joint_id = c.b2CreateRevoluteJoint(world_id, &flipper_joint_def);
 
         return .{
@@ -190,11 +190,11 @@ pub const Box2dWorld = struct {
     }
 
     pub fn activate_left(self: *Box2dWorld) void {
-        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_left_joint_id, 140);
+        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_left_joint_id, 280);
     }
 
     pub fn activate_right(self: *Box2dWorld) void {
-        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_right_joint_id, -140);
+        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_right_joint_id, -280);
     }
 
     pub fn deactivate_left(self: *Box2dWorld) void {
