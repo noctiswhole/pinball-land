@@ -17,7 +17,8 @@ pub fn main() anyerror!void {
     defer shader_resource.deinit(allocator);
     var level: Level = .{};
 
-    try level.loadPoints(allocator, 1);
+    // try level.loadPoints(allocator, 1);
+    try level.loadLevel(allocator, 1);
     const screenWidth: i32 = 2560;
     const screenHeight: i32 = 1440;
     var world = try box2d.Box2dWorld.init(allocator, &level, rl.Vector2{ .x = 0, .y = -10.0 });

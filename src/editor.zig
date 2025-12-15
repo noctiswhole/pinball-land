@@ -132,7 +132,6 @@ pub fn main() !void {
     };
 
     var level: Level = .{};
-    try level.loadPoints(allocator, 1);
     try level.loadLevel(allocator, 1);
 
     // defer level.deinit();

@@ -11,7 +11,6 @@ const LevelGeometries = std.ArrayListUnmanaged(LevelGeometry);
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
 const SELECTION_ALLOWANCE: f32 = 0.4;
-const DRAW_UNSELECTED_RADIUS: f32 = 0.1;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
 level_geometry: LevelGeometry = .{
@@ -21,6 +20,7 @@ level_geometry: LevelGeometry = .{
 },
 level_geometries: LevelGeometries = .empty,
 selected_point: ?*Point = null,
+active_geometry_index: usize = 0,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
@@ -53,28 +53,11 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 }
 
 pub fn drawPoints(self: Level) void {
-    // TODO: unify iteration with the box2d-side iteration with a iterator
-    const len = self.level_geometry.points.items.len;
-    if (len < 2) {
-        return;
+    for (self.level_geometries.items) |geometry| {
+        geometry.drawPoints(true);
     }
-
-    primitives.drawSphere(self.level_geometry.points.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
-    var index: usize = 1;
-    while (index < len) {
-        primitives.drawLine(self.level_geometry.points.items[index-1].toVector3(), self.level_geometry.points.items[index].toVector3());
-        primitives.drawSphere(self.level_geometry.points.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
-        index += 1;
-    }
-    index -= 1;
     if (self.selected_point) |spoint| {
         primitives.drawSphere(spoint.toVector3(), DRAW_SELECTED_RADIUS);
-    }
-    primitives.drawLine(self.level_geometry.points.items[index].toVector3(), self.level_geometry.points.items[index].mirror().toVector3());
-
-    while (index > 0) {
-        primitives.drawLine(self.level_geometry.points.items[index].mirror().toVector3(), self.level_geometry.points.items[index - 1].mirror().toVector3());
-        index -= 1;
     }
 }
 fn getDb(file_path: [:0]const u8) !sqlite.Db {
@@ -122,6 +105,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
     }
 
     if (self.level_geometries.items.len > 0) {
+        self.active_geometry_index = 0;
         const query =
             \\ SELECT x, y, level_geometry_id FROM
             \\ level_geometry
@@ -150,29 +134,6 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
             }
             try self.level_geometries.items[geometry_index].points.append(allocator, .{ .x = point.x, .y = point.y });
         }
-    }
-}
-
-pub fn loadPoints(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
-    var db = try getDb("assets/asset.db");
-    const query =
-        \\ SELECT x, y, level_geometry_id FROM
-        \\ level_geometry
-        \\ join level_geometry_points
-        \\ on level_geometry_points.level_geometry_id = level_geometry.id
-        \\ WHERE level_id = ? ORDER BY level_geometry_id, sort
-        ;
-    var stmt = try db.prepare(query);
-    defer stmt.deinit();
-
-    const points = try stmt.all(struct {
-        x: f32,
-        y: f32,
-        level_geometry_id: usize,
-    }, allocator, .{}, .{level_id});
-    try self.level_geometry.points.ensureTotalCapacity(allocator, points.len);
-    for (points) |point| {
-        self.level_geometry.points.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
     }
 }
 
