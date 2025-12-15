@@ -132,7 +132,7 @@ pub fn main() !void {
     };
 
     var level: Level = .{};
-    try level.loadPoints(allocator);
+    try level.loadLevel(allocator, 1);
 
     // defer level.deinit();
     while (!rl.windowShouldClose()) {
@@ -182,7 +182,7 @@ pub fn main() !void {
                         .y = collision.point.y,
                     });
                 } else if (rl.isMouseButtonDown(.left)) {
-                    std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
+                    // std.debug.print("clicked {d}, {d}, {d}\n", .{collision.point.x, collision.point.y, collision.point.z});
                     if (level.selected_point) |point| {
                         point.x = @round(collision.point.x * 4) / 4;
                         point.y = @round(collision.point.y * 4) / 4;
@@ -269,12 +269,7 @@ fn colorPicker(result: *dvui.Color) void {
 }
 
 fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
-    // var float = dvui.floatingWindow(@src(), .{}, .{ .max_size_content = .{ .w = 400, .h = 400 } });
-    // defer float.deinit();
-
-    // float.dragAreaSet(dvui.windowHeader("Floating Window", "", null));
-    //
-    //
+    _ = mouse_pos;
     var show_interface: bool = true;
     show_interface = show_interface;
     var float = dvui.floatingWindow(
@@ -310,47 +305,11 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both });
     defer scroll.deinit();
 
+    _ = dvui.dropdown(@src(), level.level_mesh_names.items[0..], &level.active_mesh_index, .{ .min_size_content = .{ .w = 100 }, .max_size_content = .width(400) });
+
     if (point) |p| {
-        // if (false) {
-        //
-        //     const structui_options: dvui.struct_ui.StructOptions(Vector2) = .initWithDefaults(.{
-        //         .x = .{ .number = .{ .min = 0, .max = 50, .widget_type = .slider } },
-        //         .y = .{ .number = .{ .min = -100, .max = 100, .widget_type = .slider } },
-        //     }, null);
-        //     var alignment: dvui.Alignment = .init(@src(), 0);
-        //     defer alignment.deinit();
-        //     _ = struct_ui.displayStruct(@src(), "x", p, 1, .{ .standard = .{} }, .{structui_options}, &alignment);
-        // }
-        _ = mouse_pos;
-
-        // var float = dvui.floatingWindow(@src(), .{ .center_on = .{ .x = 100, .y = 100, .w = 100, .h = 100 }, .open_flag = &show_interface }, .{ .expand = .both, .max_size_content = .width(200), .tag = "point" });
-        // defer float.deinit();
-
-            // const structui_options: dvui.struct_ui.StructOptions(Vector2) = .initWithDefaults(.{
-            //     .x = .{ .number = .{ .min = 0, .max = 50, .widget_type = .slider } },
-            //     .y = .{ .number = .{ .min = -100, .max = 100, .widget_type = .slider } },
-            // }, null);
         dvui.structUI(@src(), "Point", p, 1, .{});
     }
-
-    // var tl = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal, .font_style = .title_4 });
-    // const lorem = "This example shows how to use dvui for floating windows on top of an existing application.";
-    // tl.addText(lorem, .{});
-    // tl.deinit();
-
-    // var tl2 = dvui.textLayout(@src(), .{}, .{ .expand = .horizontal });
-    // tl2.addText("The dvui is painting only floating windows and dialogs.", .{});
-    // tl2.addText("\n\n", .{});
-    // tl2.addText("Framerate is managed by the application (in this demo capped at vsync).", .{});
-    // tl2.addText("\n\n", .{});
-    // tl2.addText("Cursor is only being set by dvui for floating windows.", .{});
-    // tl2.addText("\n\n", .{});
-    // if (dvui.useFreeType) {
-    //     tl2.addText("Fonts are being rendered by FreeType 2.", .{});
-    // } else {
-    //     tl2.addText("Fonts are being rendered by stb_truetype.", .{});
-    // }
-    // tl2.deinit();
 
     const label = if (dvui.Examples.show_demo_window) "Hide Demo Window" else "Show Demo Window";
     if (dvui.button(@src(), label, .{}, .{})) {
@@ -362,7 +321,7 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     }
 
     if (dvui.button(@src(), "Save Points", .{}, .{})) {
-        try level.savePoints();
+        try level.saveDbPoints();
     }
 
     // look at demo() for examples of dvui widgets, shows in a floating window
