@@ -14,6 +14,7 @@ const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
 level_geometries: LevelGeometries = .empty,
+level_geometry_names: std.ArrayListUnmanaged([]const u8) = .empty,
 selected_point: ?*Point = null,
 active_geometry_index: usize = 0,
 
@@ -73,7 +74,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
     // load geometry groups
     {
         const query =
-            \\ SELECT id, is_connected, is_loop FROM
+            \\ SELECT id, is_connected, is_loop, name FROM
             \\ level_geometry
             \\ WHERE level_id = ?
         ;
@@ -84,14 +85,17 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
             id: usize,
             is_connected: bool,
             is_loop: bool,
+            name: []const u8,
         }, allocator, .{}, .{level_id});
         try self.level_geometries.ensureTotalCapacity(allocator, geometries.len);
+        try self.level_geometry_names.ensureTotalCapacity(allocator, geometries.len);
         for (geometries) |geometry| {
             self.level_geometries.appendAssumeCapacity(.{
                 .id = geometry.id,
                 .is_connected = geometry.is_connected,
                 .is_loop = geometry.is_loop,
             });
+            self.level_geometry_names.appendAssumeCapacity(geometry.name);
         }
     }
 

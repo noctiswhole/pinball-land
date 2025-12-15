@@ -310,6 +310,8 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     var scroll = dvui.scrollArea(@src(), .{}, .{ .expand = .both });
     defer scroll.deinit();
 
+    _ = dvui.dropdown(@src(), level.level_geometry_names.items[0..], &level.active_geometry_index, .{ .min_size_content = .{ .w = 100 }, .max_size_content = .width(400) });
+
     if (point) |p| {
         // if (false) {
         //
