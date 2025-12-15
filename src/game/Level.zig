@@ -153,8 +153,8 @@ pub fn saveDbPoints(self: Level) !void {
     }
     const query =
         \\ INSERT INTO level_geometry_points
-        \\ (level_geometry_id, x, y, sort) values
-        \\ (?, ?, ?, ?)
+        \\ (level_geometry_id, x, y, sort, level_id) values
+        \\ (?, ?, ?, ?, ?)
         ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
@@ -168,6 +168,7 @@ pub fn saveDbPoints(self: Level) !void {
                 .x = geometry.points.items[i].x,
                 .y = geometry.points.items[i].y,
                 .sort = index,
+                .level_id = self.level_id,
             });
             index += 1;
         }
