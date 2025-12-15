@@ -130,7 +130,6 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
 }
 
 pub fn deleteDbPoints(self: Level, db: *sqlite.Db) !void {
-    // TODO: remove hard coded id
     const query =
         \\ DELETE FROM level_geometry_points
         \\ where level_geometry_id = ?
