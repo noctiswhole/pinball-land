@@ -67,11 +67,6 @@ fn getDb(file_path: [:0]const u8) !sqlite.Db {
 
 }
 
-const Vec2 = extern struct {
-    x: f32,
-    y: f32,
-};
-
 pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
     var db = try getDb("assets/asset.db");
 
