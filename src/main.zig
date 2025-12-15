@@ -21,7 +21,8 @@ pub fn main() anyerror!void {
     try level.loadLevel(allocator, 1);
     const screenWidth: i32 = 2560;
     const screenHeight: i32 = 1440;
-    var world = try box2d.Box2dWorld.init(allocator, &level, rl.Vector2{ .x = 0, .y = -10.0 });
+    var world = try box2d.Box2dWorld.init(rl.Vector2{ .x = 0, .y = -20.0 });
+    try world.addLevelMeshes(allocator, &level.level_meshes);
 
     defer world.deinit();
 

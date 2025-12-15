@@ -6,14 +6,14 @@ const primitives = @import("../graphics/primitives.zig");
 const sqlite = @import("sqlite");
 const LevelMesh = @import("LevelMesh.zig");
 
-const LevelGeometries = std.ArrayListUnmanaged(LevelMesh);
+pub const LevelMeshList = std.ArrayListUnmanaged(LevelMesh);
 
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
 const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
-level_meshes: LevelGeometries = .empty,
+level_meshes: LevelMeshList = .empty,
 level_mesh_names: std.ArrayListUnmanaged([]const u8) = .empty,
 selected_point: ?*Point = null,
 active_mesh_index: usize = 0,

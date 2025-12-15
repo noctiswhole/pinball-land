@@ -84,26 +84,8 @@ pub const Box2dWorld = struct {
     flipper_left_joint_id: c.b2JointId,
     flipper_right_joint_id: c.b2JointId,
 
-    pub fn init(allocator: std.mem.Allocator, level: *Level, gravity: rl.Vector2) !Box2dWorld {
-        // TODO: separate to per-frame allocator
-        var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, level.level_meshes.items[level.active_mesh_index].points.items.len * 2);
-        defer vs_list.deinit(allocator);
+    pub fn init(gravity: rl.Vector2) !Box2dWorld {
 
-        // TODO: organize this better so that the world collision doesn't need to happen in the init function
-        const len = level.level_meshes.items[level.active_mesh_index].points.items.len;
-
-        for(level.level_meshes.items[level.active_mesh_index].points.items) |point| {
-            vs_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
-            std.debug.print("x {d} y {d}\n", .{point.x, point.y});
-        }
-
-        var index = len;
-        while (index > 0) {
-            index -= 1;
-            const mirrored_point = level.level_meshes.items[level.active_mesh_index].points.items[index].mirror();
-            vs_list.appendAssumeCapacity(.{.x = mirrored_point.x, .y = mirrored_point.y});
-            std.debug.print("x {d} y {d}\n", .{mirrored_point.x, mirrored_point.y});
-        }
         const gravity_dto: c.b2Vec2 = .{
             .x = gravity.x,
             .y = gravity.y,
@@ -112,26 +94,11 @@ pub const Box2dWorld = struct {
         world_def.gravity = gravity_dto;
         const world_id: c.b2WorldId = c.b2CreateWorld(&world_def);
 
-        // // static bodies
+        // create a default body definition to attach flippers to
         const ground_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
 
         // todo: support multiple bodies
         const ground_body = Box2dBody.init_old(world_id, ground_body_def);
-        {
-            var body_chain_def = c.b2DefaultChainDef();
-            var materials: [1]c.b2SurfaceMaterial = .{c.b2DefaultSurfaceMaterial()};
-            materials[0].restitution = 0.3;
-            materials[0].friction = 0.1;
-            body_chain_def.points = vs_list.items.ptr;
-            body_chain_def.count = @intCast(vs_list.items.len);
-            // body_chain_def.points = @ptrCast(&vs);
-            // body_chain_def.count = GROUND_BODY_COUNT;
-            body_chain_def.isLoop = true;
-            body_chain_def.materials = @ptrCast(&materials);
-            body_chain_def.materialCount = materials.len;
-            body_chain_def.isLoop = level.level_meshes.items[level.active_mesh_index].is_loop;
-            _ = c.b2CreateChain(ground_body.body_id, &body_chain_def);
-        }
 
         var ball_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
         ball_body_def.position = .{
@@ -223,11 +190,11 @@ pub const Box2dWorld = struct {
     }
 
     pub fn activate_left(self: *Box2dWorld) void {
-        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_left_joint_id, 80);
+        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_left_joint_id, 140);
     }
 
     pub fn activate_right(self: *Box2dWorld) void {
-        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_right_joint_id, -80);
+        c.b2RevoluteJoint_SetMotorSpeed(self.flipper_right_joint_id, -140);
     }
 
     pub fn deactivate_left(self: *Box2dWorld) void {
@@ -268,5 +235,85 @@ pub const Box2dWorld = struct {
             }
         }
         return false;
+    }
+
+    pub fn addLevelMeshes(self: *Box2dWorld, allocator: std.mem.Allocator, level_meshes: *Level.LevelMeshList) !void {
+        // // static bodies
+        const ground_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
+
+        for (level_meshes.items) |mesh| {
+            // TODO: stop leaking memory and add body definitions to a list
+            var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, mesh.points.items.len * 2 + 2);
+            defer vs_list.deinit(allocator);
+
+            // add 0, 0 so that collisions work
+            if (!mesh.is_loop) {
+                vs_list.appendAssumeCapacity(.{});
+            }
+
+            // TODO: use common iterator in LevelMesh to go through points
+            const len = mesh.points.items.len;
+            for(mesh.points.items) |point| {
+                vs_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
+                std.debug.print("x {d} y {d}\n", .{point.x, point.y});
+            }
+
+            if (!mesh.is_connected) {
+                // add 0, 0 so that collisions work
+                if (!mesh.is_loop) {
+                    vs_list.appendAssumeCapacity(.{});
+                }
+                const ground_body = Box2dBody.init_old(self.world_id, ground_body_def);
+                {
+                    var body_chain_def = c.b2DefaultChainDef();
+                    var materials: [1]c.b2SurfaceMaterial = .{c.b2DefaultSurfaceMaterial()};
+                    materials[0].restitution = 0.3;
+                    materials[0].friction = 0.1;
+                    body_chain_def.points = vs_list.items.ptr;
+                    body_chain_def.count = @intCast(vs_list.items.len);
+                    // body_chain_def.points = @ptrCast(&vs);
+                    // body_chain_def.count = GROUND_BODY_COUNT;
+                    // body_chain_def.isLoop = true;
+                    body_chain_def.materials = @ptrCast(&materials);
+                    body_chain_def.materialCount = materials.len;
+                    body_chain_def.isLoop = mesh.is_loop;
+                    _ = c.b2CreateChain(ground_body.body_id, &body_chain_def);
+                }
+                vs_list.clearRetainingCapacity();
+                // add 0, 0 so that collisions work
+                if (!mesh.is_loop) {
+                    vs_list.appendAssumeCapacity(.{});
+                }
+            }
+
+            var index = len;
+            while (index > 0) {
+                index -= 1;
+                const mirrored_point = mesh.points.items[index].mirror();
+                vs_list.appendAssumeCapacity(.{.x = mirrored_point.x, .y = mirrored_point.y});
+                std.debug.print("x {d} y {d}\n", .{mirrored_point.x, mirrored_point.y});
+            }
+            // add 0, 0 so that collisions work
+            if (!mesh.is_loop) {
+                vs_list.appendAssumeCapacity(.{});
+            }
+
+            const ground_body = Box2dBody.init_old(self.world_id, ground_body_def);
+            {
+                var body_chain_def = c.b2DefaultChainDef();
+                var materials: [1]c.b2SurfaceMaterial = .{c.b2DefaultSurfaceMaterial()};
+                materials[0].restitution = 0.3;
+                materials[0].friction = 0.1;
+                body_chain_def.points = vs_list.items.ptr;
+                body_chain_def.count = @intCast(vs_list.items.len);
+                // body_chain_def.points = @ptrCast(&vs);
+                // body_chain_def.count = GROUND_BODY_COUNT;
+                // body_chain_def.isLoop = true;
+                body_chain_def.materials = @ptrCast(&materials);
+                body_chain_def.materialCount = materials.len;
+                body_chain_def.isLoop = mesh.is_loop;
+                _ = c.b2CreateChain(ground_body.body_id, &body_chain_def);
+            }
+        }
     }
 };
