@@ -51,7 +51,8 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 
 pub fn drawPoints(self: Level) void {
     for (self.level_geometries.items) |geometry| {
-        geometry.drawPoints(true);
+        const draw_points: bool = self.level_geometries.items[self.active_geometry_index].id == geometry.id;
+        geometry.drawPoints(draw_points);
     }
     if (self.selected_point) |spoint| {
         primitives.drawSphere(spoint.toVector3(), DRAW_SELECTED_RADIUS);

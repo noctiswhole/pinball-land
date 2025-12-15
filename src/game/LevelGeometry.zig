@@ -17,7 +17,6 @@ pub fn addPoint(self: *LevelGeometry, allocator: std.mem.Allocator, point: Point
 }
 
 pub fn drawPoints(self: LevelGeometry, show_points: bool) void {
-    _ = show_points;
     // TODO:
     // TODO: unify iteration with the box2d-side iteration with a iterator
     const len = self.points.items.len;
@@ -25,11 +24,15 @@ pub fn drawPoints(self: LevelGeometry, show_points: bool) void {
         return;
     }
 
-    primitives.drawSphere(self.points.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
+    if (show_points) {
+        primitives.drawSphere(self.points.items[0].toVector3(), DRAW_UNSELECTED_RADIUS);
+    }
     var index: usize = 1;
     while (index < len) {
         primitives.drawLine(self.points.items[index-1].toVector3(), self.points.items[index].toVector3());
-        primitives.drawSphere(self.points.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
+        if (show_points) {
+            primitives.drawSphere(self.points.items[index].toVector3(), DRAW_UNSELECTED_RADIUS);
+        }
         index += 1;
     }
     index -= 1;
