@@ -148,10 +148,7 @@ pub fn saveDbPoints(self: Level) !void {
     // TODO create resource that handles saving/loading levels
     var db = try getDb("assets/asset.db");
     try self.deleteDbPoints(&db);
-    const len = self.level_meshes.items[self.active_mesh_index].points.items.len;
-    if (len < 2) {
-        return;
-    }
+
     const query =
         \\ INSERT INTO level_mesh_points
         \\ (level_mesh_id, x, y, sort, level_id) values
@@ -161,6 +158,10 @@ pub fn saveDbPoints(self: Level) !void {
     defer stmt.deinit();
 
     for (self.level_meshes.items) |mesh| {
+        const len = mesh.points.items.len;
+        if (len < 2) {
+            continue;
+        }
         var index: usize = 0;
         for (0..len) |i| {
             stmt.reset();
