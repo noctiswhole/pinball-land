@@ -1,36 +1,36 @@
-// TODO: move most of the point-management logic to LevelGeometry
+// TODO: move most of the point-management logic to LevelMesh
 const Level = @This();
 const Vector2 = @import("../data/Vector2.zig");
 const std = @import("std");
 const primitives = @import("../graphics/primitives.zig");
 const sqlite = @import("sqlite");
-const LevelGeometry = @import("LevelGeometry.zig");
+const LevelMesh = @import("LevelMesh.zig");
 
-const LevelGeometries = std.ArrayListUnmanaged(LevelGeometry);
+const LevelGeometries = std.ArrayListUnmanaged(LevelMesh);
 
 // Maybe want to give these points IDs or something
 pub const Point = Vector2;
 const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
-level_geometries: LevelGeometries = .empty,
-level_geometry_names: std.ArrayListUnmanaged([]const u8) = .empty,
+level_meshes: LevelGeometries = .empty,
+level_mesh_names: std.ArrayListUnmanaged([]const u8) = .empty,
 selected_point: ?*Point = null,
-active_geometry_index: usize = 0,
+active_mesh_index: usize = 0,
 level_id: usize = 0,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
-    try self.level_geometries.items[self.active_geometry_index].addPoint(allocator, point);
+    try self.level_meshes.items[self.active_mesh_index].addPoint(allocator, point);
 }
 
 pub fn removePoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
-    for (0..self.level_geometries.items[self.active_geometry_index].points.items.len) |i| {
-        const point = self.level_geometries.items[self.active_geometry_index].points.items[i];
+    for (0..self.level_meshes.items[self.active_mesh_index].points.items.len) |i| {
+        const point = self.level_meshes.items[self.active_mesh_index].points.items[i];
         if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
             (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
-            _ = self.level_geometries.items[self.active_geometry_index].points.orderedRemove(i);
+            _ = self.level_meshes.items[self.active_mesh_index].points.orderedRemove(i);
             return true;
         }
     }
@@ -39,7 +39,7 @@ pub fn removePoint(self: *Level, point_search: Point) bool {
 
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
-    for (self.level_geometries.items[self.active_geometry_index].points.items) |*point| {
+    for (self.level_meshes.items[self.active_mesh_index].points.items) |*point| {
         if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
             (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
             self.selected_point = point;
@@ -50,9 +50,9 @@ pub fn selectPoint(self: *Level, point_search: Point) bool {
 }
 
 pub fn drawPoints(self: Level) void {
-    for (self.level_geometries.items) |geometry| {
-        const draw_points: bool = self.level_geometries.items[self.active_geometry_index].id == geometry.id;
-        geometry.drawPoints(draw_points);
+    for (self.level_meshes.items) |mesh| {
+        const draw_points: bool = self.level_meshes.items[self.active_mesh_index].id == mesh.id;
+        mesh.drawPoints(draw_points);
     }
     if (self.selected_point) |spoint| {
         primitives.drawSphere(spoint.toVector3(), DRAW_SELECTED_RADIUS);
@@ -73,42 +73,42 @@ fn getDb(file_path: [:0]const u8) !sqlite.Db {
 pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
     var db = try getDb("assets/asset.db");
 
-    // load geometry groups
+    // load mesh groups
     {
         const query =
             \\ SELECT id, is_connected, is_loop, name FROM
-            \\ level_geometry
+            \\ level_meshes
             \\ WHERE level_id = ?
         ;
         var stmt = try db.prepare(query);
         defer stmt.deinit();
 
-        const geometries = try stmt.all(struct {
+        const meshes = try stmt.all(struct {
             id: usize,
             is_connected: bool,
             is_loop: bool,
             name: []const u8,
         }, allocator, .{}, .{level_id});
-        try self.level_geometries.ensureTotalCapacity(allocator, geometries.len);
-        try self.level_geometry_names.ensureTotalCapacity(allocator, geometries.len);
-        for (geometries) |geometry| {
-            self.level_geometries.appendAssumeCapacity(.{
-                .id = geometry.id,
-                .is_connected = geometry.is_connected,
-                .is_loop = geometry.is_loop,
+        try self.level_meshes.ensureTotalCapacity(allocator, meshes.len);
+        try self.level_mesh_names.ensureTotalCapacity(allocator, meshes.len);
+        for (meshes) |mesh| {
+            self.level_meshes.appendAssumeCapacity(.{
+                .id = mesh.id,
+                .is_connected = mesh.is_connected,
+                .is_loop = mesh.is_loop,
             });
-            self.level_geometry_names.appendAssumeCapacity(geometry.name);
+            self.level_mesh_names.appendAssumeCapacity(mesh.name);
         }
         self.level_id = level_id;
     }
 
-    // load geometry points
-    if (self.level_geometries.items.len > 0) {
-        self.active_geometry_index = 0;
+    // load mesh points
+    if (self.level_meshes.items.len > 0) {
+        self.active_mesh_index = 0;
         const query =
-            \\ SELECT x, y, level_geometry_id FROM
-            \\ level_geometry_points
-            \\ WHERE level_id = ? ORDER BY level_geometry_id, sort
+            \\ SELECT x, y, level_mesh_id FROM
+            \\ level_mesh_points
+            \\ WHERE level_id = ? ORDER BY level_mesh_id, sort
         ;
         var stmt = try db.prepare(query);
         defer stmt.deinit();
@@ -116,27 +116,27 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
         const points = try stmt.all(struct {
             x: f32,
             y: f32,
-            level_geometry_id: usize,
+            level_mesh_id: usize,
         }, allocator, .{}, .{level_id});
 
-        var geometry_index: usize = 0;
-        // try self.level_geometries.items[self.active_geometry_index].points.ensureTotalCapacity(allocator, points.len);
+        var mesh_index: usize = 0;
+        // try self.level_meshes.items[self.active_mesh_index].points.ensureTotalCapacity(allocator, points.len);
         for (points) |point| {
-            while (self.level_geometries.items[geometry_index].id != point.level_geometry_id) {
-                geometry_index += 1;
-                if (self.level_geometries.items.len <= geometry_index) {
-                    std.debug.print("Invalid geometry index reference {d}", .{point.level_geometry_id});
+            while (self.level_meshes.items[mesh_index].id != point.level_mesh_id) {
+                mesh_index += 1;
+                if (self.level_meshes.items.len <= mesh_index) {
+                    std.debug.print("Invalid mesh index reference {d}", .{point.level_mesh_id});
                     return error.InvalidGeometryIndexReference;
                 }
             }
-            try self.level_geometries.items[geometry_index].points.append(allocator, .{ .x = point.x, .y = point.y });
+            try self.level_meshes.items[mesh_index].points.append(allocator, .{ .x = point.x, .y = point.y });
         }
     }
 }
 
 pub fn deleteDbPoints(self: Level, db: *sqlite.Db) !void {
     const query =
-        \\ DELETE FROM level_geometry_points
+        \\ DELETE FROM level_mesh_points
         \\ where level_id = ?
         ;
     var stmt = try db.prepare(query);
@@ -148,26 +148,26 @@ pub fn saveDbPoints(self: Level) !void {
     // TODO create resource that handles saving/loading levels
     var db = try getDb("assets/asset.db");
     try self.deleteDbPoints(&db);
-    const len = self.level_geometries.items[self.active_geometry_index].points.items.len;
+    const len = self.level_meshes.items[self.active_mesh_index].points.items.len;
     if (len < 2) {
         return;
     }
     const query =
-        \\ INSERT INTO level_geometry_points
-        \\ (level_geometry_id, x, y, sort, level_id) values
+        \\ INSERT INTO level_mesh_points
+        \\ (level_mesh_id, x, y, sort, level_id) values
         \\ (?, ?, ?, ?, ?)
         ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
 
-    for (self.level_geometries.items) |geometry| {
+    for (self.level_meshes.items) |mesh| {
         var index: usize = 0;
         for (0..len) |i| {
             stmt.reset();
             try stmt.exec(.{}, .{
-                .level_geometry_id = geometry.id,
-                .x = geometry.points.items[i].x,
-                .y = geometry.points.items[i].y,
+                .level_mesh_id = mesh.id,
+                .x = mesh.points.items[i].x,
+                .y = mesh.points.items[i].y,
                 .sort = index,
                 .level_id = self.level_id,
             });

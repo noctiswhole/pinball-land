@@ -1,22 +1,22 @@
-const LevelGeometry = @This();
+const LevelMesh = @This();
 const std = @import("std");
 const Vector2 = @import("../data/Vector2.zig");
 const primitives = @import("../graphics/primitives.zig");
 
 pub const Point = Vector2;
-const LevelGeometryPointList = std.ArrayListUnmanaged(Point);
+const LevelMeshPointList = std.ArrayListUnmanaged(Point);
 const DRAW_UNSELECTED_RADIUS: f32 = 0.1;
 
 id: usize,
 is_loop: bool,
 is_connected: bool,
-points: LevelGeometryPointList = .empty,
+points: LevelMeshPointList = .empty,
 
-pub fn addPoint(self: *LevelGeometry, allocator: std.mem.Allocator, point: Point) !void {
+pub fn addPoint(self: *LevelMesh, allocator: std.mem.Allocator, point: Point) !void {
     try self.points.append(allocator, point);
 }
 
-pub fn drawPoints(self: LevelGeometry, show_points: bool) void {
+pub fn drawPoints(self: LevelMesh, show_points: bool) void {
     // TODO:
     // TODO: unify iteration with the box2d-side iteration with a iterator
     const len = self.points.items.len;
