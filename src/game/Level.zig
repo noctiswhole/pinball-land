@@ -75,6 +75,7 @@ const Vec2 = extern struct {
 pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !void {
     var db = try getDb("assets/asset.db");
 
+    // load geometry groups
     {
         const query =
             \\ SELECT id, is_connected, is_loop FROM
@@ -99,6 +100,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
         }
     }
 
+    // load geometry points
     if (self.level_geometries.items.len > 0) {
         self.active_geometry_index = 0;
         const query =
