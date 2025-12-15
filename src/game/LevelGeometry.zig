@@ -33,10 +33,21 @@ pub fn drawPoints(self: LevelGeometry, show_points: bool) void {
         index += 1;
     }
     index -= 1;
-    primitives.drawLine(self.points.items[index].toVector3(), self.points.items[index].mirror().toVector3());
+    if (self.is_connected) {
+        primitives.drawLine(self.points.items[index].toVector3(), self.points.items[index].mirror().toVector3());
+    }
 
     while (index > 0) {
         primitives.drawLine(self.points.items[index].mirror().toVector3(), self.points.items[index - 1].mirror().toVector3());
         index -= 1;
+    }
+
+    if (self.is_loop) {
+        if (self.is_connected) {
+            primitives.drawLine(self.points.items[0].toVector3(), self.points.items[0].mirror().toVector3());
+        } else {
+            primitives.drawLine(self.points.items[0].toVector3(), self.points.items[len - 1].toVector3());
+            primitives.drawLine(self.points.items[0].mirror().toVector3(), self.points.items[len - 1].mirror().toVector3());
+        }
     }
 }
