@@ -17,6 +17,7 @@ level_geometries: LevelGeometries = .empty,
 level_geometry_names: std.ArrayListUnmanaged([]const u8) = .empty,
 selected_point: ?*Point = null,
 active_geometry_index: usize = 0,
+level_id: usize = 0,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
@@ -97,6 +98,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
             });
             self.level_geometry_names.appendAssumeCapacity(geometry.name);
         }
+        self.level_id = level_id;
     }
 
     // load geometry points
@@ -104,9 +106,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
         self.active_geometry_index = 0;
         const query =
             \\ SELECT x, y, level_geometry_id FROM
-            \\ level_geometry
-            \\ join level_geometry_points
-            \\ on level_geometry_points.level_geometry_id = level_geometry.id
+            \\ level_geometry_points
             \\ WHERE level_id = ? ORDER BY level_geometry_id, sort
         ;
         var stmt = try db.prepare(query);
@@ -123,7 +123,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
         for (points) |point| {
             while (self.level_geometries.items[geometry_index].id != point.level_geometry_id) {
                 geometry_index += 1;
-                if (self.level_geometries.items.len >= geometry_index) {
+                if (self.level_geometries.items.len <= geometry_index) {
                     std.debug.print("Invalid geometry index reference {d}", .{point.level_geometry_id});
                     return error.InvalidGeometryIndexReference;
                 }
@@ -136,11 +136,11 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
 pub fn deleteDbPoints(self: Level, db: *sqlite.Db) !void {
     const query =
         \\ DELETE FROM level_geometry_points
-        \\ where level_geometry_id = ?
+        \\ where level_id = ?
         ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
-    try stmt.exec(.{}, .{self.level_geometries.items[self.active_geometry_index].id});
+    try stmt.exec(.{}, .{self.level_id});
 }
 
 pub fn saveDbPoints(self: Level) !void {
@@ -159,15 +159,17 @@ pub fn saveDbPoints(self: Level) !void {
     var stmt = try db.prepare(query);
     defer stmt.deinit();
 
-    var index: usize = 0;
-    for (0..len) |i| {
-        stmt.reset();
-        try stmt.exec(.{}, .{
-            .level_id = 1,
-            .x = self.level_geometries.items[self.active_geometry_index].points.items[i].x,
-            .y = self.level_geometries.items[self.active_geometry_index].points.items[i].y,
-            .sort = index,
-        });
-        index += 1;
+    for (self.level_geometries.items) |geometry| {
+        var index: usize = 0;
+        for (0..len) |i| {
+            stmt.reset();
+            try stmt.exec(.{}, .{
+                .level_geometry_id = geometry.id,
+                .x = geometry.points.items[i].x,
+                .y = geometry.points.items[i].y,
+                .sort = index,
+            });
+            index += 1;
+        }
     }
 }
