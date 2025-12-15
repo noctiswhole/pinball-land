@@ -86,13 +86,13 @@ pub const Box2dWorld = struct {
 
     pub fn init(allocator: std.mem.Allocator, level: *Level, gravity: rl.Vector2) !Box2dWorld {
         // TODO: separate to per-frame allocator
-        var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, level.level_geometry.points.items.len * 2);
+        var vs_list = try std.ArrayListUnmanaged(c.b2Vec2).initCapacity(allocator, level.level_geometries.items[level.active_geometry_index].points.items.len * 2);
         defer vs_list.deinit(allocator);
 
         // TODO: organize this better so that the world collision doesn't need to happen in the init function
-        const len = level.level_geometry.points.items.len;
+        const len = level.level_geometries.items[level.active_geometry_index].points.items.len;
 
-        for(level.level_geometry.points.items) |point| {
+        for(level.level_geometries.items[level.active_geometry_index].points.items) |point| {
             vs_list.appendAssumeCapacity(.{ .x = point.x, .y = point.y });
             std.debug.print("x {d} y {d}\n", .{point.x, point.y});
         }
@@ -100,7 +100,7 @@ pub const Box2dWorld = struct {
         var index = len;
         while (index > 0) {
             index -= 1;
-            const mirrored_point = level.level_geometry.points.items[index].mirror();
+            const mirrored_point = level.level_geometries.items[level.active_geometry_index].points.items[index].mirror();
             vs_list.appendAssumeCapacity(.{.x = mirrored_point.x, .y = mirrored_point.y});
             std.debug.print("x {d} y {d}\n", .{mirrored_point.x, mirrored_point.y});
         }
@@ -115,6 +115,7 @@ pub const Box2dWorld = struct {
         // // static bodies
         const ground_body_def: c.b2BodyDef = c.b2DefaultBodyDef();
 
+        // todo: support multiple bodies
         const ground_body = Box2dBody.init_old(world_id, ground_body_def);
         {
             var body_chain_def = c.b2DefaultChainDef();
@@ -128,7 +129,7 @@ pub const Box2dWorld = struct {
             body_chain_def.isLoop = true;
             body_chain_def.materials = @ptrCast(&materials);
             body_chain_def.materialCount = materials.len;
-            body_chain_def.isLoop = level.level_geometry.is_loop;
+            body_chain_def.isLoop = level.level_geometries.items[level.active_geometry_index].is_loop;
             _ = c.b2CreateChain(ground_body.body_id, &body_chain_def);
         }
 

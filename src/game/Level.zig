@@ -13,27 +13,22 @@ pub const Point = Vector2;
 const SELECTION_ALLOWANCE: f32 = 0.4;
 const DRAW_SELECTED_RADIUS: f32 = 0.2;
 
-level_geometry: LevelGeometry = .{
-    .id = 1,
-    .is_connected = false,
-    .is_loop = false,
-},
 level_geometries: LevelGeometries = .empty,
 selected_point: ?*Point = null,
 active_geometry_index: usize = 0,
 
 pub fn addPoint(self: *Level, allocator: std.mem.Allocator, point: Point) !void {
     self.selected_point = null;
-    try self.level_geometry.addPoint(allocator, point);
+    try self.level_geometries.items[self.active_geometry_index].addPoint(allocator, point);
 }
 
 pub fn removePoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
-    for (0..self.level_geometry.points.items.len) |i| {
-        const point = self.level_geometry.points.items[i];
+    for (0..self.level_geometries.items[self.active_geometry_index].points.items.len) |i| {
+        const point = self.level_geometries.items[self.active_geometry_index].points.items[i];
         if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
             (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
-            _ = self.level_geometry.points.orderedRemove(i);
+            _ = self.level_geometries.items[self.active_geometry_index].points.orderedRemove(i);
             return true;
         }
     }
@@ -42,7 +37,7 @@ pub fn removePoint(self: *Level, point_search: Point) bool {
 
 pub fn selectPoint(self: *Level, point_search: Point) bool {
     self.selected_point = null;
-    for (self.level_geometry.points.items) |*point| {
+    for (self.level_geometries.items[self.active_geometry_index].points.items) |*point| {
         if ((point.x + SELECTION_ALLOWANCE > point_search.x and point.x - SELECTION_ALLOWANCE < point_search.x) and
             (point.y + SELECTION_ALLOWANCE > point_search.y and point.y - SELECTION_ALLOWANCE < point_search.y)) {
             self.selected_point = point;
@@ -123,7 +118,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
         }, allocator, .{}, .{level_id});
 
         var geometry_index: usize = 0;
-        // try self.level_geometry.points.ensureTotalCapacity(allocator, points.len);
+        // try self.level_geometries.items[self.active_geometry_index].points.ensureTotalCapacity(allocator, points.len);
         for (points) |point| {
             while (self.level_geometries.items[geometry_index].id != point.level_geometry_id) {
                 geometry_index += 1;
@@ -137,22 +132,22 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
     }
 }
 
-pub fn deletePoints(db: *sqlite.Db) !void {
+pub fn deletePoints(self: Level, db: *sqlite.Db) !void {
     // TODO: remove hard coded id
     const query =
         \\ DELETE FROM level_geometry_points
-        \\ where level_geometry_id = 1
+        \\ where level_geometry_id = ?
         ;
     var stmt = try db.prepare(query);
     defer stmt.deinit();
-    try stmt.exec(.{}, .{});
+    try stmt.exec(.{}, .{self.level_geometries.items[self.active_geometry_index].id});
 }
 
 pub fn savePoints(self: Level) !void {
     // TODO create resource that handles saving/loading levels
     var db = try getDb("assets/asset.db");
-    try deletePoints(&db);
-    const len = self.level_geometry.points.items.len;
+    try self.deletePoints(&db);
+    const len = self.level_geometries.items[self.active_geometry_index].points.items.len;
     if (len < 2) {
         return;
     }
@@ -169,8 +164,8 @@ pub fn savePoints(self: Level) !void {
         stmt.reset();
         try stmt.exec(.{}, .{
             .level_id = 1,
-            .x = self.level_geometry.points.items[i].x,
-            .y = self.level_geometry.points.items[i].y,
+            .x = self.level_geometries.items[self.active_geometry_index].points.items[i].x,
+            .y = self.level_geometries.items[self.active_geometry_index].points.items[i].y,
             .sort = index,
         });
         index += 1;
