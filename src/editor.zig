@@ -362,7 +362,7 @@ fn dvuiStuff(point: ?*Vector2, mouse_pos: rl.Vector3, level: *Level) !void {
     }
 
     if (dvui.button(@src(), "Save Points", .{}, .{})) {
-        try level.savePoints();
+        try level.saveDbPoints();
     }
 
     // look at demo() for examples of dvui widgets, shows in a floating window

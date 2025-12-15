@@ -129,7 +129,7 @@ pub fn loadLevel(self: *Level, allocator: std.mem.Allocator, level_id: usize) !v
     }
 }
 
-pub fn deletePoints(self: Level, db: *sqlite.Db) !void {
+pub fn deleteDbPoints(self: Level, db: *sqlite.Db) !void {
     // TODO: remove hard coded id
     const query =
         \\ DELETE FROM level_geometry_points
@@ -140,10 +140,10 @@ pub fn deletePoints(self: Level, db: *sqlite.Db) !void {
     try stmt.exec(.{}, .{self.level_geometries.items[self.active_geometry_index].id});
 }
 
-pub fn savePoints(self: Level) !void {
+pub fn saveDbPoints(self: Level) !void {
     // TODO create resource that handles saving/loading levels
     var db = try getDb("assets/asset.db");
-    try self.deletePoints(&db);
+    try self.deleteDbPoints(&db);
     const len = self.level_geometries.items[self.active_geometry_index].points.items.len;
     if (len < 2) {
         return;
